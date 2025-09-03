@@ -1,0 +1,285 @@
+/* ---------------------------------------------------------
+   1) IMPORTS: Tailwind + animaciones
+   --------------------------------------------------------- */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ---------------------------------------------------------
+   2) PALETA DE COLORES (brand) + GRADIENTE
+   - Estas variables representan tu guía visual.
+   - NO son las variables semánticas de shadcn (esas van en :root).
+   --------------------------------------------------------- */
+@theme {
+  --color-background: #f4f6f9;
+  --color-text: #333333;
+
+  /* Escala de grises (UI neutra) */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  /* Primario (calidda) */
+  --color-primary-50: #ecfbff;
+  --color-primary-100: #d9f6ff;
+  --color-primary-200: #c0f0ff;
+  --color-primary-300: #9de8ff;
+  --color-primary-400: #6ddcff;
+  --color-primary-500: #2ec6ff;
+  --color-primary-600: #00a1de;
+  --color-primary-700: #0081b8;
+  --color-primary-800: #006697;
+  --color-primary-900: #00527b;
+  --color-primary-950: #003e62;
+
+  /* Acento (verde) */
+  --color-accent-50: #e8f9ef;
+  --color-accent-100: #d1f4df;
+  --color-accent-200: #b3eec9;
+  --color-accent-300: #8de6ac;
+  --color-accent-400: #5cda86;
+  --color-accent-500: #00bf58;
+  --color-accent-600: #00a34b;
+  --color-accent-700: #00873e;
+  --color-accent-800: #006f33;
+  --color-accent-900: #005b2a;
+  --color-accent-950: #004523;
+
+  /* Advertencia (rojo) */
+  --color-warn-50: #ffebee;
+  --color-warn-100: #ffcdd2;
+  --color-warn-200: #ef9a9a;
+  --color-warn-300: #e57373;
+  --color-warn-400: #ef5350;
+  --color-warn-500: #f44336;
+  --color-warn-600: #e53935;
+  --color-warn-700: #d32f2f;
+  --color-warn-800: #c62828;
+  --color-warn-900: #b71c1c;
+  --color-warn-950: #7f0000;
+
+  /* Amarillo corporativo */
+  --color-amarillo-50: #fff8e1;
+  --color-amarillo-100: #ffecb3;
+  --color-amarillo-200: #ffe082;
+  --color-amarillo-300: #ffd54f;
+  --color-amarillo-400: #ffca28;
+  --color-amarillo-500: #ffc107;
+  --color-amarillo-600: #fab200;
+  --color-amarillo-700: #f9a825;
+  --color-amarillo-800: #f57f17;
+  --color-amarillo-900: #ef6c00;
+  --color-amarillo-950: #e65100;
+
+  /* Aliases de identidad y fondos */
+  --color-calidda: #00a1de;
+  --color-calidda-hover: #2ec6ff;
+  --color-verde: #00a34b;
+  --color-verde-hover: #00bf58;
+  --color-amarillo: #fab200;
+  --color-rojo: #ff5252;
+  --color-celeste: #ecfbfc;
+  --color-gris-1: #868885;
+  --color-gris-3: #d9d9d9;
+  --color-titulo: #003865;
+
+  --color-bg: #f4f6f9;
+  --color-card-bg: #ffffff;
+  --color-sidebar-bg: #004c97; /* fallback si no usas gradiente */
+  --color-sidebar-text: #ffffff;
+  --color-table-header-bg: #e6f5fb;
+  --color-table-row-hover: #f0f9ff;
+  --color-success-bg: #4caf50;
+  --color-secondary-bg: #999999;
+
+  /* Tipografía básica */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-medium: 14px;
+
+  /* Alturas de línea */
+  --line-height-xs: 1rem;
+  --line-height-sm: 1.25rem;
+  --line-height-md: 1.5rem;
+  --line-height-lg: 1.75rem;
+  --line-height-xl: 1.75rem;
+
+  /* Sombras */
+  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+  /* Gradiente corporativo a reutilizar */
+  --linear-gradient: linear-gradient(180deg, #00a34b 0%, #27c2f3 100%);
+}
+
+/* ---------------------------------------------------------
+   3) ESTILOS BASE DE LA APP (capa general)
+   --------------------------------------------------------- */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Helpers semánticos rápidos */
+.text-primary { color: var(--color-primary-500); }
+.text-accent  { color: var(--color-accent-500); }
+.text-warn    { color: var(--color-warn-500); }
+
+.bg-primary   { background-color: var(--color-primary-500); }
+.bg-accent    { background-color: var(--color-accent-500); }
+.bg-success   { background-color: var(--color-success-bg); }
+.bg-secondary { background-color: var(--color-secondary-bg); }
+
+/* Atajo para aplicar el gradiente como fondo donde quieras */
+.bg-gradient { background: var(--linear-gradient); }
+
+/* Tipografías utilitarias */
+.text-body {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-md);
+}
+.text-caption {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  color: var(--color-gray-500);
+}
+
+/* ---------------------------------------------------------
+   4) MAPEOS shadcn (inline theme)
+   - Conecta tokens semánticos de shadcn con tus variables.
+   - Tailwind usará estos tokens (bg-background, text-foreground, etc).
+   --------------------------------------------------------- */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Charts y sidebar semánticos */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* ---------------------------------------------------------
+   5) TEMA BASE (solo light)
+   - Estos son los tokens semánticos que usa shadcn internamente.
+   - Deben ser COLORES (no gradientes).
+   - El gradiente para el sidebar lo aplicamos con una CLASE aparte.
+   --------------------------------------------------------- */
+:root {
+  --radius: 0.625rem;
+
+  /* Paleta semántica base (oklch) */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  /* Colores para gráficos */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Sidebar (tema claro por defecto, COLORES sólidos)
+     - Estos tokens se usan como color de fondo/borde/hover.
+     - NO pongas el gradiente aquí. Para gradiente usa .sidebar-gradient. */
+  --sidebar: var(--linear-gradient);        /* Fondo plano por defecto */
+  --sidebar-foreground: #1f2937;          /* Texto oscuro legible */
+  --sidebar-primary: rgba(0,0,0,0.08);    /* Hover/selected leve */
+  --sidebar-primary-foreground: #0b1b2b;  /* Texto sobre primary */
+  --sidebar-accent: rgba(0,0,0,0.04);     /* Hover/acento más leve */
+  --sidebar-accent-foreground: #0b1b2b;   /* Texto sobre accent */
+  --sidebar-border: rgba(0,0,0,0.08);     /* Borde sutil */
+  --sidebar-ring: rgba(39, 194, 243, 0.35); /* Ring accesible */
+}
+
+/* ---------------------------------------------------------
+   6) REGLAS BASE TAILWIND (apoyadas en tokens semánticos)
+   - border-border y outline-ring/50 requieren que tus tokens
+     estén mapeados (ver @theme inline y tailwind.config).
+   --------------------------------------------------------- */
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
+}
+
+/* ---------------------------------------------------------
+   7) CLASE PARA APLICAR EL GRADIENTE EN EL SIDEBAR
+   - Úsala en el componente <Sidebar className="sidebar-gradient">.
+   - Pone el gradiente de fondo y ajusta tokens de contraste
+     para que textos/hover/bordes sean blancos y legibles.
+   - Funciona tanto en desktop como en mobile (SheetContent).
+   --------------------------------------------------------- */
+.sidebar-gradient {
+  background: var(--linear-gradient);
+  color: #fff;
+
+  /* Overwrites de tokens del sidebar para contraste en gradiente */
+  --sidebar-foreground: #fff;
+  --sidebar-primary: rgba(255,255,255,0.14);
+  --sidebar-primary-foreground: #fff;
+  --sidebar-accent: rgba(255,255,255,0.10);
+  --sidebar-accent-foreground: #fff;
+  --sidebar-border: rgba(255,255,255,0.18);
+  --sidebar-ring: rgba(255,255,255,0.35);
+}
