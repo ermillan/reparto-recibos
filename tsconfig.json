@@ -9,13 +9,14 @@
     }
   ],
   "compilerOptions": {
+    "declaration": true,
+    "outDir": "dist",
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "src/vite-env.d.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/vite-env.d.ts"],
+  "exclude": ["node_modules", "dist", "src/**/*.d.ts"]
 }
