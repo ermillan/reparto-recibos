@@ -90,7 +90,7 @@
   --color-gris-3: #d9d9d9;
   --color-titulo: #003865;
 
-  --color-bg: #f4f6f9;
+  --color-bg: #CFE2FE;
   --color-card-bg: #ffffff;
   --color-sidebar-bg: #004c97; /* fallback si no usas gradiente */
   --color-sidebar-text: #ffffff;
@@ -220,7 +220,7 @@ body {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: var(--color-calidda); 
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);

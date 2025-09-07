@@ -14,24 +14,31 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
-  Home,
   Shield,
   Users,
-  FileStack,
   Upload,
   LogOut,
   ChevronRight,
   UserSquare2,
   Building2,
+  FileText,
 } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "@radix-ui/react-separator";
+import { logout } from "@/infrastructure/auth/auth.api";
 
 export function AppSidebar() {
+  const navigate = useNavigate();
+
+    const handleLogout = () => {
+    logout(); // limpia cookie
+    navigate("/login"); // redirige al login
+  };
+
   return (
     <Sidebar collapsible="icon" className="sidebar-gradient text-white">
       <SidebarHeader className="py-5">
@@ -69,38 +76,11 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-white/90">Plataforma</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/dashboard">
-                    <Home className="h-4 w-4" />
-                    <span>Dashboard</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/seguridad">
-                    <Shield className="h-4 w-4" />
-                    <span>Seguridad</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/seguridad/perfiles" className="pl-6">
-                    <Users className="h-4 w-4" />
-                    <span>Perfiles</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
               <SidebarMenu>
                 <Collapsible defaultOpen className="group/collapsible">
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="group-data-[state=collapsed]/sidebar:justify-center group-data-[state=collapsed]/sidebar:px-0 group-data-[state=collapsed]/sidebar:gap-0 bg-white/20 hover:bg-white/30 focus-visible:ring-2 focus-visible:ring-white/50 hover:cursor-pointer">
+                      <SidebarMenuButton className="...">
                         <Shield className="h-4 w-4" />
                         <span>Seguridad</span>
                         <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
@@ -108,8 +88,8 @@ export function AppSidebar() {
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        <SidebarMenuSubItem >
-                          <SidebarMenuSubButton asChild >
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
                             <NavLink to="/seguridad/perfiles">
                               <Users className="h-4 w-4" />
                               <span>Perfiles</span>
@@ -118,7 +98,7 @@ export function AppSidebar() {
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton asChild>
-                            <NavLink to="/seguridad/usuarios">
+                            <NavLink to="/seguridad/contratista">
                               <UserSquare2 className="h-3.5 w-3.5" />
                               <span>Contratistas y otros</span>
                             </NavLink>
@@ -130,23 +110,31 @@ export function AppSidebar() {
                 </Collapsible>
               </SidebarMenu>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/gestion-recibos">
-                    <FileStack className="h-4 w-4" />
-                    <span>Gestión de Recibos</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/gestion-recibos/carga" className="pl-6">
-                    <Upload className="h-4 w-4" />
-                    <span>Carga de Recibos</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <SidebarMenu>
+                <Collapsible defaultOpen className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="...">
+                        <FileText className="h-4 w-4" />
+                        <span>Gestión de Recibos</span>
+                        <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink to="/recibos/carga">
+                              <Upload className="h-4 w-4" />
+                              <span>Carga de Recibos</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              </SidebarMenu>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -159,13 +147,14 @@ export function AppSidebar() {
               <Button
                 variant="destructive"
                 aria-label="Cerrar sesión"
+                onClick={handleLogout}
                 className="transition-colors ease-in-out duration-300 bg-white text-gray-700 hover:bg-red-400 hover:text-white
-            w-full flex items-center justify-center
-            group-data-[state=collapsed]/sidebar:w-8
-            group-data-[state=collapsed]/sidebar:h-8
-            group-data-[state=collapsed]/sidebar:px-0
-            group-data-[state=collapsed]/sidebar:gap-2
-          "
+                w-full flex items-center justify-center
+                group-data-[state=collapsed]/sidebar:w-8
+                group-data-[state=collapsed]/sidebar:h-8
+                group-data-[state=collapsed]/sidebar:px-0
+                group-data-[state=collapsed]/sidebar:gap-2
+              "
               >
                 <LogOut className="h-4 w-4" />
                 <span className="group-data-[state=collapsed]/sidebar:hidden">Cerrar sesión</span>
