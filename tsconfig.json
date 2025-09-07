@@ -9,8 +9,7 @@
     }
   ],
   "compilerOptions": {
-    "declaration": true,
-    "outDir": "dist",
+    "declaration": false,
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
