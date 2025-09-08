@@ -130,7 +130,7 @@
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: "Isidora Sans", Roboto, "Helvetica Neue", sans-serif;
 }
 
 /* Helpers semánticos rápidos */
@@ -303,3 +303,79 @@ body {
   --sidebar-border: rgba(255, 255, 255, 0.18);
   --sidebar-ring: rgba(255, 255, 255, 0.35);
 }
+
+
+/* ---------------------------------------------------------
+   8) TIPOGRAFÍA: ISIDORA SANS (14 variantes)
+   --------------------------------------------------------- */
+
+/* Light (300) */
+@font-face {
+  font-family: "Isidora Sans";
+  src: url("/fonts/IsidoraSans-Light.woff2") format("woff2"),
+       url("/fonts/IsidoraSans-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Regular (400) */
+@font-face {
+  font-family: "Isidora Sans";
+  src: url("/fonts/IsidoraSans-Regular.woff2") format("woff2"),
+       url("/fonts/IsidoraSans-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Medium (500) */
+@font-face {
+  font-family: "Isidora Sans";
+  src: url("/fonts/IsidoraSans-Medium.woff2") format("woff2"),
+       url("/fonts/IsidoraSans-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* SemiBold (600) */
+@font-face {
+  font-family: "Isidora Sans";
+  src: url("/fonts/IsidoraSans-SemiBold.woff2") format("woff2"),
+       url("/fonts/IsidoraSans-SemiBold.woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold (700) */
+@font-face {
+  font-family: "Isidora Sans";
+  src: url("/fonts/IsidoraSans-Bold.woff2") format("woff2"),
+       url("/fonts/IsidoraSans-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Black (900) */
+@font-face {
+  font-family: "Isidora Sans";
+  src: url("/fonts/IsidoraSans-Black.woff2") format("woff2"),
+       url("/fonts/IsidoraSans-Black.woff") format("woff");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Black Italic (900 italic) */
+@font-face {
+  font-family: "Isidora Sans";
+  src: url("/fonts/IsidoraSans-BlackIt.woff2") format("woff2"),
+       url("/fonts/IsidoraSans-BlackIt.woff") format("woff");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
