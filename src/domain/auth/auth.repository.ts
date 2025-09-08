@@ -1,4 +1,5 @@
+import type { LoginResponse } from "./auth.types";
+
 export interface AuthRepository {
-  login(email: string, password: string): Promise<{ access_token: string }>;
-  logout(): void;
+  login(email: string, password: string): Promise<LoginResponse>;
 }

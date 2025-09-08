@@ -24,6 +24,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LoginUseCase } from "@/application/auth/login.usecase";
+import { useAuth } from "@/hooks/use-auth";
 
 // Interfaces for props to improve type safety and readability
 type LoginHeaderProps = {
@@ -225,6 +226,8 @@ const Login: React.FC = () => {
   const [otp, setOtp] = useState("");
   const [secondsRemaining, setSecondsRemaining] = useState(300); // 5 minutes = 300 seconds
 
+  const { loginUser } = useAuth();
+
   // Countdown timer effect
   useEffect(() => {
     if (isOtpSent && secondsRemaining > 0) {
@@ -260,19 +263,16 @@ const Login: React.FC = () => {
         // TODO: Implement OTP validation logic
         // console.log("Validating OTP:", otp)
       } else {
-        // TODO: Implement email sending logic
-        // console.log("Sending email to:", email)
         setIsOtpSent(true);
         setSecondsRemaining(300); // Start timer
       }
     } else {
       toast.promise(loginUseCase.execute(loginForm.username, loginForm.password), {
         loading: "Iniciando sesión...",
-        success: () => {
-          setTimeout(() => {
-            navigate("/dashboard");
-          }, 1000);
-          return "¡Login exitoso!";
+        success: (res) => {
+          loginUser(res);
+          navigate("/dashboard");
+          return `¡Bienvenido ${res.usuario.nombre}!`;
         },
         error: "Credenciales inválidas o error en el servidor",
         position: "top-right",

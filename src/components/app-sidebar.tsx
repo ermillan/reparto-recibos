@@ -29,17 +29,19 @@ import {
 import { Button } from "./ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "@radix-ui/react-separator";
-import { LogoutUseCase } from "@/application/auth/logout.usecase";
-import { AuthApi } from "@/infrastructure/auth/auth.api";
+// import { LogoutUseCase } from "@/application/auth/logout.usecase";
+// import { AuthApi } from "@/infrastructure/auth/auth.api";
+import { useAuth } from "@/hooks/use-auth";
 
-const authRepo = new AuthApi();
-const logoutUseCase = new LogoutUseCase(authRepo);
+// const authRepo = new AuthApi();
+// const logoutUseCase = new LogoutUseCase(authRepo);
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const { user, logoutUser } = useAuth();
 
   const handleLogout = () => {
-    logoutUseCase.execute();
+    logoutUser();
     navigate("/login");
   };
 
@@ -57,18 +59,15 @@ export function AppSidebar() {
             <div className="font-semibold leading-tight text-wrap">
               Sistema de entrega de recibos
             </div>
-            <div className="text-xs opacity-85 truncate">Supervisor calidda</div>
-            <div className="text-xs opacity-85 truncate">Matto Choque Javier</div>
+            <div className="text-xs opacity-85 truncate">{user?.login}</div>
+            <div className="text-xs opacity-85 truncate">{user?.nombre}</div>
           </div>
 
-          {/* Acción/indicador (solo cuando está expandido) */}
           <button
             className="ml-auto text-white/80 hover:text-white transition
                      group-data-[state=collapsed]/sidebar:hidden"
             aria-label="Más opciones"
-          >
-            {/* <ChevronDown className="h-4 w-4" /> */}
-          </button>
+          ></button>
         </div>
       </SidebarHeader>
 
