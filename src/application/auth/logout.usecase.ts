@@ -1,13 +1,13 @@
 import type { AuthRepository } from "@/domain/auth/auth.repository";
 
-export class LoginUseCase {
+export class LogoutUseCase {
   private readonly authRepository: AuthRepository;
 
   constructor(authRepository: AuthRepository) {
     this.authRepository = authRepository;
   }
 
-  async execute(email: string, password: string) {
-    return this.authRepository.login(email, password);
+  execute() {
+    return this.authRepository.logout();
   }
 }

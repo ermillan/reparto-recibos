@@ -29,14 +29,18 @@ import {
 import { Button } from "./ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "@radix-ui/react-separator";
-import { logout } from "@/infrastructure/auth/auth.api";
+import { LogoutUseCase } from "@/application/auth/logout.usecase";
+import { AuthApi } from "@/infrastructure/auth/auth.api";
+
+const authRepo = new AuthApi();
+const logoutUseCase = new LogoutUseCase(authRepo);
 
 export function AppSidebar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout(); // limpia cookie
-    navigate("/login"); // redirige al login
+    logoutUseCase.execute();
+    navigate("/login");
   };
 
   return (

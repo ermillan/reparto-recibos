@@ -1,6 +1,6 @@
 import { FaUser } from "react-icons/fa";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
-import { login } from "@/infrastructure/auth/auth.api";
+import { AuthApi } from "@/infrastructure/auth/auth.api";
 
 import logoCalidda from "@/assets/logo_calidda.png";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { LoginUseCase } from "@/application/auth/login.usecase";
 
 // Interfaces for props to improve type safety and readability
 type LoginHeaderProps = {
@@ -50,6 +51,9 @@ type LoginFooterProps = {
   isOtpSent: boolean;
   setIsForgotPassword: React.Dispatch<React.SetStateAction<boolean>>;
 };
+
+const authRepo = new AuthApi();
+const loginUseCase = new LoginUseCase(authRepo);
 
 // Shared Header component
 const LoginHeader: React.FC<LoginHeaderProps> = ({ isForgotPassword }) => (
@@ -262,21 +266,17 @@ const Login: React.FC = () => {
         setSecondsRemaining(300); // Start timer
       }
     } else {
-      toast.promise(
-        login(loginForm.username, loginForm.password), // tu promesa
-        {
-          loading: "Iniciando sesión...",
-          success: () => {
-            // Redirigir al dashboard después de un delay
-            setTimeout(() => {
-              navigate("/dashboard");
-            }, 1000);
-            return "¡Login exitoso!";
-          },
-          error: "Credenciales inválidas o error en el servidor",
-          position: "top-right",
-        }
-      );
+      toast.promise(loginUseCase.execute(loginForm.username, loginForm.password), {
+        loading: "Iniciando sesión...",
+        success: () => {
+          setTimeout(() => {
+            navigate("/dashboard");
+          }, 1000);
+          return "¡Login exitoso!";
+        },
+        error: "Credenciales inválidas o error en el servidor",
+        position: "top-right",
+      });
     }
   };
 
