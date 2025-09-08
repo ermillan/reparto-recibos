@@ -1,10 +1,6 @@
-import { Outlet } from "react-router-dom"
-import { AppSidebar } from "@/components/app-sidebar"
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+import { Outlet } from "react-router-dom";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function DashboardLayout() {
   return (
@@ -16,9 +12,7 @@ export default function DashboardLayout() {
           <div className="flex h-14 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             {/* <Separator orientation="vertical" className="mx-2 h-6" /> */}
-            <h1 className="text-base sm:text-lg font-semibold text-center">
-              Reparto de Recibos
-            </h1>
+            <h1 className="text-base sm:text-lg font-semibold text-center">Reparto de Recibos</h1>
           </div>
         </header>
 
@@ -28,5 +22,5 @@ export default function DashboardLayout() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

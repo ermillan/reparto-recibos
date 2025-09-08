@@ -54,7 +54,7 @@ const SecurityProfile = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl font-semibold text-primary">Consulta de Perfiles</h1>
-        <Button asChild variant='ghost' className="flex items-center gap-2">
+        <Button asChild variant="ghost" className="flex items-center gap-2">
           <NavLink to="/seguridad/perfiles/crear-perfil">
             <Plus className="h-4 w-4" />
             <span>Agregar</span>

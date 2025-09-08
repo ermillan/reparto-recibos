@@ -34,7 +34,7 @@ import { logout } from "@/infrastructure/auth/auth.api";
 export function AppSidebar() {
   const navigate = useNavigate();
 
-    const handleLogout = () => {
+  const handleLogout = () => {
     logout(); // limpia cookie
     navigate("/login"); // redirige al login
   };

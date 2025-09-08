@@ -90,7 +90,7 @@
   --color-gris-3: #d9d9d9;
   --color-titulo: #003865;
 
-  --color-bg: #CFE2FE;
+  --color-bg: #cfe2fe;
   --color-card-bg: #ffffff;
   --color-sidebar-bg: #004c97; /* fallback si no usas gradiente */
   --color-sidebar-text: #ffffff;
@@ -134,17 +134,33 @@ body {
 }
 
 /* Helpers semánticos rápidos */
-.text-primary { color: var(--color-primary-500); }
-.text-accent  { color: var(--color-accent-500); }
-.text-warn    { color: var(--color-warn-500); }
+.text-primary {
+  color: var(--color-primary-500);
+}
+.text-accent {
+  color: var(--color-accent-500);
+}
+.text-warn {
+  color: var(--color-warn-500);
+}
 
-.bg-primary   { background-color: var(--color-primary-500); }
-.bg-accent    { background-color: var(--color-accent-500); }
-.bg-success   { background-color: var(--color-success-bg); }
-.bg-secondary { background-color: var(--color-secondary-bg); }
+.bg-primary {
+  background-color: var(--color-primary-500);
+}
+.bg-accent {
+  background-color: var(--color-accent-500);
+}
+.bg-success {
+  background-color: var(--color-success-bg);
+}
+.bg-secondary {
+  background-color: var(--color-secondary-bg);
+}
 
 /* Atajo para aplicar el gradiente como fondo donde quieras */
-.bg-gradient { background: var(--linear-gradient); }
+.bg-gradient {
+  background: var(--linear-gradient);
+}
 
 /* Tipografías utilitarias */
 .text-body {
@@ -220,7 +236,7 @@ body {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: var(--color-calidda); 
+  --primary: var(--color-calidda);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -243,13 +259,13 @@ body {
   /* Sidebar (tema claro por defecto, COLORES sólidos)
      - Estos tokens se usan como color de fondo/borde/hover.
      - NO pongas el gradiente aquí. Para gradiente usa .sidebar-gradient. */
-  --sidebar: var(--linear-gradient);        /* Fondo plano por defecto */
-  --sidebar-foreground: #1f2937;          /* Texto oscuro legible */
-  --sidebar-primary: rgba(0,0,0,0.08);    /* Hover/selected leve */
-  --sidebar-primary-foreground: #0b1b2b;  /* Texto sobre primary */
-  --sidebar-accent: rgba(0,0,0,0.04);     /* Hover/acento más leve */
-  --sidebar-accent-foreground: #0b1b2b;   /* Texto sobre accent */
-  --sidebar-border: rgba(0,0,0,0.08);     /* Borde sutil */
+  --sidebar: var(--linear-gradient); /* Fondo plano por defecto */
+  --sidebar-foreground: #1f2937; /* Texto oscuro legible */
+  --sidebar-primary: rgba(0, 0, 0, 0.08); /* Hover/selected leve */
+  --sidebar-primary-foreground: #0b1b2b; /* Texto sobre primary */
+  --sidebar-accent: rgba(0, 0, 0, 0.04); /* Hover/acento más leve */
+  --sidebar-accent-foreground: #0b1b2b; /* Texto sobre accent */
+  --sidebar-border: rgba(0, 0, 0, 0.08); /* Borde sutil */
   --sidebar-ring: rgba(39, 194, 243, 0.35); /* Ring accesible */
 }
 
@@ -259,8 +275,12 @@ body {
      estén mapeados (ver @theme inline y tailwind.config).
    --------------------------------------------------------- */
 @layer base {
-  * { @apply border-border outline-ring/50; }
-  body { @apply bg-background text-foreground; }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 /* ---------------------------------------------------------
@@ -276,10 +296,10 @@ body {
 
   /* Overwrites de tokens del sidebar para contraste en gradiente */
   --sidebar-foreground: #fff;
-  --sidebar-primary: rgba(255,255,255,0.14);
+  --sidebar-primary: rgba(255, 255, 255, 0.14);
   --sidebar-primary-foreground: #fff;
-  --sidebar-accent: rgba(255,255,255,0.10);
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
   --sidebar-accent-foreground: #fff;
-  --sidebar-border: rgba(255,255,255,0.18);
-  --sidebar-ring: rgba(255,255,255,0.35);
+  --sidebar-border: rgba(255, 255, 255, 0.18);
+  --sidebar-ring: rgba(255, 255, 255, 0.35);
 }

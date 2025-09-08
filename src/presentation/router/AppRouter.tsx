@@ -25,13 +25,13 @@ export default function AppRouter() {
       {/* Privadas */}
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
-        
+
         <Route path="/seguridad/perfiles" element={<SecurityProfile />} />
         <Route path="/seguridad/perfiles/crear-perfil" element={<CreateProfile />} />
 
         <Route path="/seguridad/contratista" element={<ConsultContractor />} />
         <Route path="/seguridad/contratista/crear-contratista" element={<CreateContractor />} />
-        
+
         <Route path="/contratistas" element={<div>Contratistas</div>} />
         <Route path="/gestion-recibos" element={<div>Gestión de Recibos</div>} />
         <Route path="/gestion-recibos/carga" element={<div>Carga de Recibos</div>} />

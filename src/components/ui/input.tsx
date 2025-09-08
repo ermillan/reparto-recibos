@@ -1,11 +1,11 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 type InputProps = {
-  icon?: React.ReactNode
-  className?: string
-} & React.InputHTMLAttributes<HTMLInputElement>
+  icon?: React.ReactNode;
+  className?: string;
+} & React.InputHTMLAttributes<HTMLInputElement>;
 
 function Input({ className, type, icon, ...props }: InputProps) {
   return (
@@ -26,7 +26,7 @@ function Input({ className, type, icon, ...props }: InputProps) {
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">{icon}</div>
       )}
     </div>
-  )
+  );
 }
 
-export { Input }
+export { Input };

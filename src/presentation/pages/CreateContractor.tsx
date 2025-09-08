@@ -1,16 +1,16 @@
-import React, { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { ArrowLeft, Save } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Reglas de validación (regex)
 const regex = {
@@ -19,10 +19,10 @@ const regex = {
   documento: /^[0-9]{8}$/, // 8 dígitos
   email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // formato email
   celular: /^[0-9]{9}$/, // 9 dígitos
-}
+};
 
 const CreateContractor = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     nombre: "",
     apellidoPaterno: "",
@@ -34,41 +34,37 @@ const CreateContractor = () => {
     direccion: "",
     estado: "Activo",
     perfil: "",
-  })
+  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateField = (name: string, value: string) => {
-    let error = ""
+    let error = "";
     if (regex[name as keyof typeof regex]) {
       if (!regex[name as keyof typeof regex].test(value)) {
-        error = "Formato inválido"
+        error = "Formato inválido";
       }
     }
-    setErrors((prev) => ({ ...prev, [name]: error }))
-  }
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-    validateField(name, value)
-  }
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    validateField(name, value);
+  };
 
   const handleSave = () => {
-    console.log("Guardando usuario:", form)
+    console.log("Guardando usuario:", form);
     // Aquí conectas con tu API
-  }
+  };
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl font-semibold text-primary">Registrar Usuario</h1>
-        <Button
-          variant="outline"
-          className="flex items-center gap-2"
-          onClick={() => navigate(-1)}
-        >
+        <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
           Atrás
         </Button>
@@ -76,9 +72,7 @@ const CreateContractor = () => {
 
       {/* Formulario */}
       <div className="rounded-md border p-6 bg-card shadow-sm">
-        <h2 className="text-sm font-semibold text-primary mb-4">
-          Datos Generales
-        </h2>
+        <h2 className="text-sm font-semibold text-primary mb-4">Datos Generales</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Nombre */}
@@ -91,9 +85,7 @@ const CreateContractor = () => {
               onChange={handleChange}
               placeholder="Ej: Juan"
             />
-            {errors.nombre && (
-              <span className="text-xs text-red-500">{errors.nombre}</span>
-            )}
+            {errors.nombre && <span className="text-xs text-red-500">{errors.nombre}</span>}
           </div>
 
           {/* Apellido Paterno */}
@@ -130,9 +122,7 @@ const CreateContractor = () => {
               onChange={handleChange}
               placeholder="Ej: jgomez"
             />
-            {errors.usuario && (
-              <span className="text-xs text-red-500">{errors.usuario}</span>
-            )}
+            {errors.usuario && <span className="text-xs text-red-500">{errors.usuario}</span>}
           </div>
 
           {/* Documento */}
@@ -145,9 +135,7 @@ const CreateContractor = () => {
               onChange={handleChange}
               placeholder="Ej: 12345678"
             />
-            {errors.documento && (
-              <span className="text-xs text-red-500">{errors.documento}</span>
-            )}
+            {errors.documento && <span className="text-xs text-red-500">{errors.documento}</span>}
           </div>
 
           {/* Email */}
@@ -161,9 +149,7 @@ const CreateContractor = () => {
               onChange={handleChange}
               placeholder="Ej: usuario@correo.com"
             />
-            {errors.email && (
-              <span className="text-xs text-red-500">{errors.email}</span>
-            )}
+            {errors.email && <span className="text-xs text-red-500">{errors.email}</span>}
           </div>
 
           {/* Celular */}
@@ -176,9 +162,7 @@ const CreateContractor = () => {
               onChange={handleChange}
               placeholder="Ej: 987654321"
             />
-            {errors.celular && (
-              <span className="text-xs text-red-500">{errors.celular}</span>
-            )}
+            {errors.celular && <span className="text-xs text-red-500">{errors.celular}</span>}
           </div>
 
           {/* Dirección */}
@@ -198,9 +182,7 @@ const CreateContractor = () => {
             <Label htmlFor="estado">Seleccione el estado</Label>
             <Select
               value={form.estado}
-              onValueChange={(val) =>
-                setForm((prev) => ({ ...prev, estado: val }))
-              }
+              onValueChange={(val) => setForm((prev) => ({ ...prev, estado: val }))}
             >
               <SelectTrigger id="estado" className="w-full">
                 <SelectValue placeholder="Seleccione estado" />
@@ -217,17 +199,13 @@ const CreateContractor = () => {
             <Label htmlFor="perfil">Seleccione el perfil</Label>
             <Select
               value={form.perfil}
-              onValueChange={(val) =>
-                setForm((prev) => ({ ...prev, perfil: val }))
-              }
+              onValueChange={(val) => setForm((prev) => ({ ...prev, perfil: val }))}
             >
               <SelectTrigger id="perfil" className="w-full">
                 <SelectValue placeholder="Seleccione perfil" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Soporte de aplicaciones">
-                  Soporte de aplicaciones
-                </SelectItem>
+                <SelectItem value="Soporte de aplicaciones">Soporte de aplicaciones</SelectItem>
                 <SelectItem value="Contratista">Contratista</SelectItem>
                 <SelectItem value="Repartidor">Repartidor</SelectItem>
               </SelectContent>
@@ -244,7 +222,7 @@ const CreateContractor = () => {
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CreateContractor
+export default CreateContractor;

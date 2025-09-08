@@ -1,1 +1,5 @@
-yarn test:ci
+#!/usr/bin/env sh
+
+echo "🚀 Running pre-commit hook..."
+
+npx lint-staged
