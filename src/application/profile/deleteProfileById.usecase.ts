@@ -1,6 +1,6 @@
 import type { ProfileRepository } from "@/domain/profile/profile.repository";
 
-export class GetProfileById {
+export class DeleteProfileById {
   private repo: ProfileRepository;
 
   constructor(repo: ProfileRepository) {

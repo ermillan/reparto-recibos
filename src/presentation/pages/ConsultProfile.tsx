@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,7 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Search,
   Plus,
   Printer,
   ChevronsLeft,
@@ -25,14 +24,17 @@ import {
   ChevronRight,
   ChevronsRight,
   Info,
+  PenIcon,
+  Trash2,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { NavLink } from "react-router-dom";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 import { ProfileApi } from "@/infrastructure/services/profile/profile.api";
 import { GetProfiles } from "@/application/profile/getProfiles.usecase";
+import { DeleteProfileById } from "@/application/profile";
 
 // Tipos (usa tus tipos reales si ya los tienes)
 type ProfileItem = {
@@ -47,25 +49,26 @@ type ProfileItem = {
 
 const ROWS_SKELETON = 3;
 
+// Instancias compartidas
+const profileApi = new ProfileApi();
+const getProfilesUC = new GetProfiles(profileApi);
+const deleteProfileUC = new DeleteProfileById(profileApi);
+
 const SkeletonTable = () => (
   <div className="rounded-md border overflow-x-auto">
     <Table>
       <TableHeader className="bg-primary">
         <TableRow>
-          <TableHead className="w-12 text-white"></TableHead>
           <TableHead className="text-white">Código</TableHead>
           <TableHead className="text-white">Nombre</TableHead>
           <TableHead className="text-white">Descripción</TableHead>
-          <TableHead className="text-white">Peso</TableHead>
           <TableHead className="text-white">Estado</TableHead>
+          <TableHead className="text-white">Acciones</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {Array.from({ length: ROWS_SKELETON }).map((_, i) => (
           <TableRow key={i}>
-            <TableCell>
-              <Skeleton className="h-4 w-4 rounded" />
-            </TableCell>
             <TableCell>
               <Skeleton className="h-4 w-24" />
             </TableCell>
@@ -76,10 +79,10 @@ const SkeletonTable = () => (
               <Skeleton className="h-4 w-56" />
             </TableCell>
             <TableCell>
-              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-4 w-20" />
             </TableCell>
             <TableCell>
-              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-24" />
             </TableCell>
           </TableRow>
         ))}
@@ -89,23 +92,22 @@ const SkeletonTable = () => (
 );
 
 const ConsultProfiles = () => {
-  // Datos en pantalla
+  // const navigate = useNavigate();
+
+  // Datos y fallback
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [lastNonEmpty, setLastNonEmpty] = useState<ProfileItem[]>([]);
 
-  // Filtros (cliente)
+  // Filtros
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"all" | "activo" | "inactivo">("activo");
-  const [searchTriggered, setSearchTriggered] = useState(false);
 
   // Paginación (server)
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
 
-  // Meta backend
+  // Meta backend / UI
   const [total, setTotal] = useState(0);
-
-  // Estado UI
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,47 +115,41 @@ const ConsultProfiles = () => {
   const rangeStart = total === 0 ? 0 : (page - 1) * size + 1;
   const rangeEnd = Math.min(page * size, total);
 
-  // Helper para mapear el filtro de UI -> query.activo
   const mapStatusToActivo = (s: "all" | "activo" | "inactivo"): boolean | undefined => {
     if (s === "activo") return true;
     if (s === "inactivo") return false;
-    return undefined; // sin filtro por activo
+    return undefined;
   };
 
-  // Carga desde backend usando GetProfiles correctamente (query object)
+  // Carga desde backend — extraído para reusar tras delete
+  const fetchProfiles = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const query = {
+        // Evita enviar params "undefined" si tu repo no los omite automáticamente
+        activo: mapStatusToActivo(status),
+        nombre: description.trim() || undefined,
+        page,
+        size,
+      };
+      const response = await getProfilesUC.execute(query as any);
+      setProfiles(response.items);
+      setTotal(response.meta.total);
+      if (response.items?.length) setLastNonEmpty(response.items);
+    } catch (err) {
+      console.error("Error cargando perfiles", err);
+      setError("No se pudo cargar la lista de perfiles.");
+    } finally {
+      setLoading(false);
+    }
+  }, [status, description, page, size]);
+
   useEffect(() => {
-    const fetchProfiles = async () => {
-      setLoading(true);
-      setError(null);
-
-      const api = new ProfileApi();
-      const useCase = new GetProfiles(api);
-
-      try {
-        const query = {
-          activo: mapStatusToActivo(status),
-          nombre: description || "", // si tu API soporta vacío para "sin filtro"
-          page,
-          size,
-        };
-        const response = await useCase.execute(query);
-        setProfiles(response.items);
-        setTotal(response.meta.total);
-        if (response.items?.length) setLastNonEmpty(response.items);
-      } catch (err: any) {
-        console.error("Error cargando perfiles", err);
-        setError("No se pudo cargar la lista de perfiles.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Nota: si quieres que solo busque cuando des clic en "Buscar",
-    // mueve description/status fuera del array de dependencias
     fetchProfiles();
-  }, [page, size, status, description]);
+  }, [fetchProfiles]);
 
-  // Filtrado en cliente (opcional; si el servidor ya filtra por 'nombre'/'activo', podrías omitir esto)
+  // Filtrado en cliente (si tu API ya filtra por nombre/activo, esto es opcional)
   const filteredProfiles = useMemo(() => {
     const list = profiles ?? [];
     const text = description.trim().toLowerCase();
@@ -173,26 +169,32 @@ const ConsultProfiles = () => {
     });
   }, [description, status, profiles]);
 
-  // Conjunto final a mostrar (fallback a último snapshot si no hay coincidencias)
+  // Fallback de visualización
   const displayed =
     filteredProfiles.length > 0
       ? filteredProfiles
-      : searchTriggered && lastNonEmpty.length > 0
+      : lastNonEmpty.length > 0
         ? lastNonEmpty
         : filteredProfiles;
 
   const noExactMatches =
-    searchTriggered && filteredProfiles.length === 0 && lastNonEmpty.length > 0;
-
-  const handleSearch = () => {
-    // Si prefieres que el query al backend solo se dispare aquí,
-    // mueve description/status fuera del useEffect de fetch y colócalo aquí.
-    setSearchTriggered(true);
-    setPage(1);
-  };
+    filteredProfiles.length === 0 &&
+    lastNonEmpty.length > 0 &&
+    (description.trim().length > 0 || status !== "all");
 
   const canPrev = page > 1;
   const canNext = page < totalPages;
+
+  const handleDeleteProfile = async (id: number) => {
+    const promise = deleteProfileUC.execute(id);
+    await toast.promise(promise, {
+      loading: "Eliminando perfil...",
+      success: "¡Perfil eliminado correctamente!",
+      error: "Error en el servidor.",
+    });
+    // Recargar la tabla después de eliminar
+    fetchProfiles();
+  };
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
@@ -207,7 +209,7 @@ const ConsultProfiles = () => {
         </Button>
       </div>
 
-      {/* Fila 1: Buscador */}
+      {/* Buscador */}
       <div className="grid grid-cols-1 gap-4">
         <div className="grid w-full items-center gap-1.5">
           <Label htmlFor="description" className="text-xs sm:text-sm text-muted-foreground">
@@ -218,13 +220,16 @@ const ConsultProfiles = () => {
             id="description"
             placeholder="Buscar..."
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              setPage(1);
+            }}
             className="h-10"
           />
         </div>
       </div>
 
-      {/* Fila 2: Estado / Registros por página */}
+      {/* Estado / Registros por página */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Estado */}
         <div className="flex flex-col gap-1.5 min-w-0">
@@ -249,7 +254,7 @@ const ConsultProfiles = () => {
           </Select>
         </div>
 
-        {/* (Hueco para futuro filtro, por ejemplo Orden) */}
+        {/* placeholder para futuras opciones */}
         <div className="flex flex-col gap-1.5 min-w-0">
           <Label className="text-xs sm:text-sm text-muted-foreground invisible">placeholder</Label>
           <div className="h-10" />
@@ -281,10 +286,6 @@ const ConsultProfiles = () => {
 
       {/* Acciones */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
-        <Button variant="secondary" className="h-10" onClick={handleSearch}>
-          <Search className="h-4 w-4 mr-2" />
-          Buscar
-        </Button>
         <Button variant="outline" className="h-10">
           <Printer className="h-4 w-4 mr-2" />
           Imprimir
@@ -295,9 +296,7 @@ const ConsultProfiles = () => {
       {noExactMatches && (
         <div className="flex items-start gap-2 text-sm text-muted-foreground">
           <Info className="h-4 w-4 mt-0.5" />
-          <p>
-            No hubo coincidencias exactas con el filtro. Mostrando los últimos resultados obtenidos.
-          </p>
+          <p>Sin coincidencias exactas. Mostrando los últimos resultados obtenidos.</p>
         </div>
       )}
 
@@ -309,38 +308,55 @@ const ConsultProfiles = () => {
           <Table>
             <TableHeader className="bg-primary">
               <TableRow>
-                <TableHead className="w-12 text-white"></TableHead>
                 <TableHead className="text-white">Código</TableHead>
                 <TableHead className="text-white">Nombre</TableHead>
                 <TableHead className="text-white">Descripción</TableHead>
-                {/* <TableHead className="text-white">Peso</TableHead> */}
                 <TableHead className="text-white">Estado</TableHead>
+                <TableHead className="text-white">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {error ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-6 text-center text-destructive">
+                  <TableCell colSpan={5} className="py-6 text-center text-destructive">
                     {error}
                   </TableCell>
                 </TableRow>
               ) : displayed.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
                     No se encontraron resultados
                   </TableCell>
                 </TableRow>
               ) : (
                 displayed.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell>
-                      <Checkbox />
-                    </TableCell>
                     <TableCell>{p.codigo?.trim?.() ?? p.codigo}</TableCell>
                     <TableCell>{p.nombre}</TableCell>
                     <TableCell>{p.descripcion}</TableCell>
-                    {/* <TableCell>{p.peso}</TableCell> */}
                     <TableCell>{p.activo ? "Activo" : "Inactivo"}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-row gap-2">
+                        <Button
+                          variant="outline"
+                          aria-label="Editar Perfil"
+                          className="transition-colors ease-in-out duration-300 hover:bg-green-50 hover:text-green-700"
+                          asChild
+                        >
+                          <NavLink to={`/seguridad/perfiles/actualizar-perfil/${p.id}`}>
+                            <PenIcon className="h-4 w-4" />
+                          </NavLink>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          aria-label="Eliminar Perfil"
+                          onClick={() => handleDeleteProfile(p.id)}
+                          className="transition-colors ease-in-out duration-300 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
