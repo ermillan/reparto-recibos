@@ -127,7 +127,7 @@ export function AppSidebar() {
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton asChild>
-                            <NavLink to="/recibos/carga">
+                            <NavLink to="/gestion-recibos/carga-recibos">
                               <Upload className="h-4 w-4" />
                               <span>Carga de Recibos</span>
                             </NavLink>

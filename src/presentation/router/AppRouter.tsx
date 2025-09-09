@@ -8,6 +8,7 @@ import CreateProfile from "@/presentation/pages/CreateProfile";
 import ConsultContractor from "@/presentation/pages/ConsultContractor";
 import CreateContractor from "@/presentation/pages/CreateContractor";
 import ConsultProfiles from "@/presentation/pages/ConsultProfile";
+import ReceiptUpload from "@/presentation/pages/ReceiptUpload";
 
 export default function AppRouter() {
   return (
@@ -36,9 +37,8 @@ export default function AppRouter() {
           path="/seguridad/contratista/actualizar-contratista/:id"
           element={<CreateContractor />}
         />
-        {/* /seguridad/usuarios/actualizar-usuario/ */}
 
-        <Route path="/contratistas" element={<div>Contratistas</div>} />
+        <Route path="/gestion-recibos/carga-recibos" element={<ReceiptUpload />} />
         <Route path="/gestion-recibos" element={<div>Gestión de Recibos</div>} />
         <Route path="/gestion-recibos/carga" element={<div>Carga de Recibos</div>} />
       </Route>
