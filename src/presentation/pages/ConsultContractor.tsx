@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,10 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Search,
   Plus,
-  Printer,
-  Upload,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -174,16 +171,16 @@ const ConsultContractor = () => {
   const canNext = page < totalPages;
 
   // Reset rápido de filtros
-  const resetFilters = () => {
-    setNameFilter("");
-    setUserFilter("");
-    setDocumentFilter("");
-    setContractorFilter("Todos");
-    setStatusFilter("Activo");
-    setSortBy("Login");
-    setSortDesc(true);
-    setPage(1);
-  };
+  // const resetFilters = () => {
+  //   setNameFilter("");
+  //   setUserFilter("");
+  //   setDocumentFilter("");
+  //   setContractorFilter("Todos");
+  //   setStatusFilter("Activo");
+  //   setSortBy("Login");
+  //   setSortDesc(true);
+  //   setPage(1);
+  // };
 
   const handleDeleteUser = async (id: number) => {
     const promise = deleteUser.exec(id);
@@ -357,33 +354,6 @@ const ConsultContractor = () => {
               </Select>
             </div>
           </div>
-        </div>
-
-        {/* Acciones filtros */}
-        <div className="mt-4 flex flex-col sm:flex-row gap-2">
-          <Button
-            variant="secondary"
-            className="h-12 w-full sm:w-auto"
-            onClick={() => {
-              setPage(1);
-              fetchUsers();
-            }}
-          >
-            <Search className="h-4 w-4 mr-2" />
-            Buscar
-          </Button>
-          <Button variant="outline" className="h-12 w-full sm:w-auto" onClick={resetFilters}>
-            Limpiar
-          </Button>
-          <div className="flex-1" />
-          <Button variant="outline" className="h-12 w-full sm:w-auto">
-            <Printer className="h-4 w-4 mr-2" />
-            Imprimir
-          </Button>
-          <Button className="h-12 w-full sm:w-auto">
-            <Upload className="h-4 w-4 mr-2" />
-            Carga Masiva
-          </Button>
         </div>
       </div>
 

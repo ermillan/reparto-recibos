@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/table";
 import {
   Plus,
-  Printer,
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
@@ -281,14 +280,6 @@ const ConsultProfile = () => {
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      {/* Acciones */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
-        <Button variant="outline" className="h-10">
-          <Printer className="h-4 w-4 mr-2" />
-          Imprimir
-        </Button>
       </div>
 
       {/* Aviso de fallback */}
