@@ -6,6 +6,7 @@ import type {
   ProfileItem,
   ProfileMenuResponse,
   ProfilesResponse,
+  UpdateProfilePayload,
 } from "@/domain/profile/profile.types";
 import type { ProfileRepository } from "@/domain/profile/profile.repository";
 
@@ -18,20 +19,20 @@ export class ProfileApi implements ProfileRepository {
     return data;
   }
 
-  // async getProfileById(id: number): Promise<ProfileItem> {
-  //   const { data } = await http.get<ProfileItem>(`${ENDPOINTS.getProfileById}/${id}`);
-  //   return data;
-  // }
+  async getProfileById(id: number): Promise<ProfileItem> {
+    const { data } = await http.get<ProfileItem>(`${ENDPOINTS.getProfileById}/${id}`);
+    return data;
+  }
 
   async createProfile(payload: CreateProfileDto): Promise<ProfileItem> {
     const { data } = await http.post<ProfileItem>(ENDPOINTS.createProfile, payload);
     return data;
   }
 
-  // async updateProfile(id: number, payload: Partial<ProfileItem>): Promise<ProfileItem> {
-  //   const { data } = await http.put<ProfileItem>(`${ENDPOINTS.updateProfile}/${id}`, payload);
-  //   return data;
-  // }
+  async updateProfileById(id: number, payload: UpdateProfilePayload): Promise<ProfileItem> {
+    const { data } = await http.put<ProfileItem>(`${ENDPOINTS.updateProfile}/${id}`, payload);
+    return data;
+  }
 
   async deleteProfileById(id: number): Promise<void> {
     await http.delete(`${ENDPOINTS.deleteProfile}/${id}`);

@@ -1,3 +1,4 @@
+// presentation/pages/CreateProfile.tsx
 import React, { useEffect, useState, Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +15,18 @@ import { ArrowLeft, Save, Loader2, ChevronRight, ChevronDown } from "lucide-reac
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-import { GetAccessOptions, CreateProfile as CreateProfileUseCase } from "@/application/profile";
+import {
+  GetAccessOptions,
+  CreateProfile as CreateProfileUseCase,
+  GetProfileById as GetProfileByIdUseCase,
+  UpdateProfileById as UpdateProfileUseCase,
+} from "@/application/profile";
 import { ProfileApi } from "@/infrastructure/services/profile/profile.api";
-import type { CreateProfileDto, ProfileMenuItem } from "@/domain/profile/profile.types";
-
-const api = new ProfileApi();
-const accessUseCase = new GetAccessOptions(api);
-const createUseCase = new CreateProfileUseCase(api);
+import type {
+  CreateProfileDto,
+  UpdateProfilePayload,
+  ProfileMenuItem,
+} from "@/domain/profile/profile.types";
 
 // ===== Helpers árbol =====
 const deepCloneMenu = (items: ProfileMenuItem[]): ProfileMenuItem[] =>
@@ -45,7 +51,29 @@ const toggleNodeById = (
     return node.sub?.length ? { ...node, sub: toggleNodeById(node.sub, id, mode) } : node;
   });
 
-// Recolecta IDs solo si el nodo y TODOS sus ancestros están marcados
+// Construye un mapa id -> check desde el menú del perfil (respuesta del backend)
+const indexChecksFromProfile = (nodes: ProfileMenuItem[] | undefined) => {
+  const map = new Map<number, boolean>();
+  const walk = (n: ProfileMenuItem) => {
+    map.set(n.id, !!n.check);
+    (n.sub ?? []).forEach(walk);
+  };
+  (nodes ?? []).forEach(walk);
+  return map;
+};
+
+// Aplica checks de un mapa al árbol base
+const applyChecksToBase = (
+  base: ProfileMenuItem[],
+  checks: Map<number, boolean>
+): ProfileMenuItem[] =>
+  base.map((n) => ({
+    ...n,
+    check: checks.has(n.id) ? !!checks.get(n.id) : !!n.check,
+    sub: applyChecksToBase(n.sub ?? [], checks),
+  }));
+
+// Recolecta IDs solo si el nodo y TODOS sus ancestros están marcados (para guardar)
 const collectCheckedIds = (nodes: ProfileMenuItem[], ancestorsChecked = true): number[] => {
   const ids: number[] = [];
   nodes.forEach((n) => {
@@ -61,10 +89,17 @@ const collectCheckedIds = (nodes: ProfileMenuItem[], ancestorsChecked = true): n
 const allChildrenChecked = (item: ProfileMenuItem): boolean =>
   (item.sub ?? []).length > 0 && item.sub.every((ch) => ch.check && allChildrenChecked(ch));
 
-const CreateProfile = () => {
+// ===== Instancias de casos de uso =====
+const api = new ProfileApi();
+const accessUseCase = new GetAccessOptions(api);
+const createUseCase = new CreateProfileUseCase(api);
+const getProfileByIdUseCase = new GetProfileByIdUseCase(api);
+const updateUseCase = new UpdateProfileUseCase(api);
+
+const CreateProfile: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const isEdit = Boolean(id); // si luego implementas edición
+  const isEdit = Boolean(id);
 
   // Form
   const [name, setName] = useState(""); // nombre
@@ -85,25 +120,42 @@ const CreateProfile = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await accessUseCase.execute(); // { menu: [...] }
-        const initialMenu = deepCloneMenu(data.menu ?? []);
-        setMenu(initialMenu);
+        // 1) Obtener menú base
+        const access = await accessUseCase.execute(); // { menu: [...] }
+        const base = deepCloneMenu(access.menu ?? []);
 
+        // expandir primer nivel
         const defaultExpanded: Record<number, boolean> = {};
-        initialMenu.forEach((m) => {
+        base.forEach((m) => {
           defaultExpanded[m.id] = true;
         });
-        setExpanded(defaultExpanded);
+
+        // 2) Si edit, traer perfil y aplicar datos + checks
+        if (isEdit && id) {
+          const profile = await getProfileByIdUseCase.execute(Number(id));
+          setName(profile.nombre ?? "");
+          setDescription(profile.descripcion ?? "");
+          setStatus(profile.activo ? "active" : "inactive");
+
+          const checksMap = indexChecksFromProfile(profile.menu);
+          const merged = applyChecksToBase(base, checksMap);
+
+          setMenu(merged);
+          setExpanded(defaultExpanded);
+        } else {
+          setMenu(base);
+          setExpanded(defaultExpanded);
+        }
       } catch (e: any) {
         console.error(e);
-        setError("No se pudo cargar la lista de accesos.");
+        setError("No se pudo cargar la información necesaria.");
       } finally {
         setLoading(false);
       }
     };
 
     load();
-  }, []);
+  }, [isEdit, id]);
 
   const toggleExpand = (nodeId: number) => {
     setExpanded((prev) => ({ ...prev, [nodeId]: !prev[nodeId] }));
@@ -124,7 +176,7 @@ const CreateProfile = () => {
     // Si algún ancestro está desmarcado, este nodo (y sus hijos) quedan deshabilitados
     const disabled = !ancestorsChecked;
 
-    // Para hijos: solo están habilitados si los ancestros (incluido el padre) están marcados.
+    // Para hijos: habilitados si ancestros (incluido el padre) están marcados
     const nextAncestorsChecked = ancestorsChecked && !!node.check;
 
     return (
@@ -188,28 +240,43 @@ const CreateProfile = () => {
     setError(null);
 
     try {
-      // Sólo IDs válidos (nodo + ancestros marcados)
       const opcionIds = collectCheckedIds(menu);
 
-      const payload: CreateProfileDto = {
-        nombre: name.trim(),
-        descripcion: description.trim(),
-        activo: status === "active",
-        opcionIds,
-      };
+      if (isEdit && id) {
+        const payload: UpdateProfilePayload = {
+          nombre: name.trim(),
+          descripcion: description.trim(),
+          activo: status === "active",
+          opcionIds,
+        };
 
-      const promise = createUseCase.execute(payload);
+        toast.promise(updateUseCase.execute(Number(id), payload), {
+          loading: "Actualizando perfil...",
+          success: "¡Perfil actualizado correctamente!",
+          error: (err) =>
+            err?.response?.data?.title ||
+            err?.response?.data?.message ||
+            err?.message ||
+            "Error en el servidor.",
+        });
+      } else {
+        const payload: CreateProfileDto = {
+          nombre: name.trim(),
+          descripcion: description.trim(),
+          activo: status === "active",
+          opcionIds,
+        };
 
-      await toast.promise(promise, {
-        loading: "Creando perfil...",
-        success: "¡Perfil creado correctamente!",
-        position: "top-right",
-        error: (err) =>
-          err?.response?.data?.title ||
-          err?.response?.data?.message ||
-          err?.message ||
-          "Error en el servidor.",
-      });
+        await toast.promise(createUseCase.execute(payload), {
+          loading: "Creando perfil...",
+          success: "¡Perfil creado correctamente!",
+          error: (err) =>
+            err?.response?.data?.title ||
+            err?.response?.data?.message ||
+            err?.message ||
+            "Error en el servidor.",
+        });
+      }
 
       navigate(-1);
     } catch (e: any) {

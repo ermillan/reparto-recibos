@@ -65,3 +65,18 @@ export interface CreateProfileDto {
   activo: boolean;
   opcionIds: number[];
 }
+
+export interface UpdateProfileDto {
+  id: number; // identificador del perfil a actualizar
+  nombre: string; // nombre del perfil
+  descripcion: string; // descripción del perfil
+  activo: boolean; // estado del perfil
+  opcionIds: number[]; // ids de opciones (accesos) seleccionadas
+}
+
+export interface UpdateProfilePayload {
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+  opcionIds: number[];
+}
