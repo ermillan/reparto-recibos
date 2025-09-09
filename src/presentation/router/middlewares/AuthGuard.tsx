@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store/store";
-import { login, logout } from "@/store/authSlice";
+import { login, logout } from "@/store/slices/authSlice";
 import type { LoginResponse } from "@/domain/auth/auth.types";
 
 export function useAuth() {

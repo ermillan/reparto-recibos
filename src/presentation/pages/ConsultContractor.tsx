@@ -1,3 +1,4 @@
+// src/pages/security/users/ConsultContractor.tsx
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,28 +18,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  PenIcon,
-  Trash2,
-} from "lucide-react";
+import { Plus, PenIcon, Trash2 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { toast } from "sonner";
 
-// ✅ Casos de uso (barrels)
+// UC
 import { DeleteUser, GetUsersPaginated } from "@/application/users";
 import { GetContractors } from "@/application/contractor";
 
-// ✅ Tipos de dominio
+// Dominio
 import type { ContractorItem } from "@/domain/contractors/contractor.type";
 import type { UsersQuery } from "@/domain/users/user.types";
 import { ContractorApi, UserApi } from "@/infrastructure/services/recibos.api";
 
-// ========= Instancias de API / UC =========
+// PaginationBar + Redux perPage
+import PaginationBar from "@/components/common/PaginationBar";
+import { useAppSelector } from "@/store/hooks";
+// ⬇️ ajusta este import si tu slice está en otra ruta
+import { selectPerPage } from "@/store/slices/tablePrefs.slice";
+
 const userApi = new UserApi();
 const contractorApi = new ContractorApi();
 
@@ -71,9 +69,9 @@ const ConsultContractor = () => {
   const [sortBy, setSortBy] = useState<"Login" | "Nombre" | "Codigo" | "NumeroDocumento">("Login");
   const [sortDesc, setSortDesc] = useState(true);
 
-  // ===== Paginación (server) =====
+  // ===== Paginación =====
   const [page, setPage] = useState(1); // Page (1-based)
-  const [perPage, setPerPage] = useState(20); // Size
+  const perPage = useAppSelector(selectPerPage); // <- desde Redux
 
   // ===== Datos / UI =====
   const [rows, setRows] = useState<UserRow[]>([]);
@@ -84,10 +82,6 @@ const ConsultContractor = () => {
   // Contratistas
   const [contractors, setContractors] = useState<ContractorItem[]>([]);
   const [loadingContractors, setLoadingContractors] = useState(false);
-
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
-  const startIndex = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const endIndex = Math.min(page * perPage, total);
 
   // ✅ Si "Todos" → undefined; si no → number
   const idContratistaParam = useMemo<number | undefined>(() => {
@@ -119,7 +113,7 @@ const ConsultContractor = () => {
     try {
       const query: UsersQuery = {
         Page: page,
-        Size: perPage,
+        Size: perPage, // <- viene de Redux
         Login: userFilter.trim() || undefined,
         Nombre: nameFilter.trim() || undefined,
         Codigo: undefined,
@@ -146,7 +140,7 @@ const ConsultContractor = () => {
     }
   }, [
     page,
-    perPage,
+    perPage, // <- cuando cambie globalmente, se vuelve a pedir
     userFilter,
     nameFilter,
     documentFilter,
@@ -165,22 +159,6 @@ const ConsultContractor = () => {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
-
-  // Helpers paginación
-  const canPrev = page > 1;
-  const canNext = page < totalPages;
-
-  // Reset rápido de filtros
-  // const resetFilters = () => {
-  //   setNameFilter("");
-  //   setUserFilter("");
-  //   setDocumentFilter("");
-  //   setContractorFilter("Todos");
-  //   setStatusFilter("Activo");
-  //   setSortBy("Login");
-  //   setSortDesc(true);
-  //   setPage(1);
-  // };
 
   const handleDeleteUser = async (id: number) => {
     const promise = deleteUser.exec(id);
@@ -409,7 +387,6 @@ const ConsultContractor = () => {
                         className="transition-colors ease-in-out duration-300 hover:bg-green-50 hover:text-green-700"
                         asChild
                       >
-                        {/* ✅ ruta a editar usuario */}
                         <NavLink to={`/seguridad/contratista/actualizar-contratista/${u.id}`}>
                           <PenIcon className="h-4 w-4" />
                         </NavLink>
@@ -437,73 +414,14 @@ const ConsultContractor = () => {
         </Table>
       </div>
 
-      {/* Paginación */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm">Items por página:</span>
-          <Select
-            value={String(perPage)}
-            onValueChange={(val) => {
-              const n = Number(val);
-              setPerPage(n);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[96px] h-10">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="w-[--radix-select-trigger-width]">
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm">
-            {total === 0 ? 0 : startIndex} – {endIndex} de {total}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10"
-              onClick={() => setPage(1)}
-              disabled={!canPrev || loading}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={!canPrev || loading}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={!canNext || loading}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10"
-              onClick={() => setPage(totalPages)}
-              disabled={!canNext || loading}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Paginación (reutilizable) */}
+      <PaginationBar
+        total={total}
+        page={page}
+        onPageChange={setPage}
+        isLoading={loading}
+        className="mt-2"
+      />
     </div>
   );
 };

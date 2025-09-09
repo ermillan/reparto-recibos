@@ -1,30 +1,28 @@
+// src/store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "./authSlice";
-import storage from "redux-persist/lib/storage"; // localStorage
+import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 import { combineReducers } from "redux";
 
-const persistConfig = {
-  key: "root",
+import authReducer from "./slices/authSlice";
+import tablePrefsReducer from "./slices/tablePrefs.slice";
+
+const authPersistConfig = {
+  key: "auth",
   storage,
-  whitelist: ["auth"], // Solo persistimos auth
+  // whitelist: ["token","user"] // si quieres granularidad
 };
 
 const rootReducer = combineReducers({
-  auth: authReducer,
+  auth: persistReducer(authPersistConfig, authReducer),
+  tablePrefs: tablePrefsReducer, // no persistido
 });
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
-
 export const store = configureStore({
-  reducer: persistedReducer,
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false,
-    }),
+  reducer: rootReducer,
+  middleware: (gdm) => gdm({ serializableCheck: false }),
 });
 
 export const persistor = persistStore(store);
-
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

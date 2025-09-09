@@ -1,3 +1,4 @@
+// src/pages/security/profiles/ConsultProfile.tsx
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,36 +17,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Plus,
-  ChevronsLeft,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsRight,
-  Info,
-  PenIcon,
-  Trash2,
-} from "lucide-react";
+import { Plus, Info, PenIcon, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { NavLink, useLocation } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-// ⬇️ Mantengo tu import de API como lo tienes
 import { ProfileApi } from "@/infrastructure/services/recibos.api";
-
-// ⬇️ Usamos los casos de uso correctos
 import { DeleteProfile, GetProfilesPaginated } from "@/application/profiles";
-
-// ⬇️ Tipos del dominio que ya te compartí
 import type {
   ProfilesPaginatedQuery,
   ProfilesPaginatedResponse,
 } from "@/domain/profiles/profile.types";
 
+// PaginationBar + Redux perPage
+import PaginationBar from "@/components/common/PaginationBar";
+import { useAppSelector } from "@/store/hooks";
+import { selectPerPage } from "@/store/slices/tablePrefs.slice";
+
 const ROWS_SKELETON = 3;
 
-// Instancias compartidas
 const profileApi = new ProfileApi();
 const getProfilesPaginatedUC = new GetProfilesPaginated(profileApi);
 const deleteProfileUC = new DeleteProfile(profileApi);
@@ -90,7 +81,7 @@ const SkeletonTable = () => (
 const ConsultProfile = () => {
   const location = useLocation();
 
-  // Datos (tipados con la respuesta paginada del dominio)
+  // Datos
   const [profiles, setProfiles] = useState<ProfilesPaginatedResponse["items"]>([]);
   const [lastNonEmpty, setLastNonEmpty] = useState<ProfilesPaginatedResponse["items"]>([]);
 
@@ -98,31 +89,25 @@ const ConsultProfile = () => {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"activo" | "inactivo">("activo");
 
-  // Paginación (server)
+  // Paginación
   const [page, setPage] = useState(1);
-  const [size, setSize] = useState(10);
+  const perPage = useAppSelector(selectPerPage); // <- Redux (compartido)
 
-  // Meta backend / UI
+  // Meta UI
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const totalPages = Math.max(1, Math.ceil(total / size));
-  const rangeStart = total === 0 ? 0 : (page - 1) * size + 1;
-  const rangeEnd = Math.min(page * size, total);
-
-  // Mapea el estado del filtro a boolean estricto para el backend
   const mapStatusToActivo = (s: "activo" | "inactivo"): boolean => s === "activo";
 
-  // Carga desde backend — usando el UC paginado + tipos del dominio
   const fetchProfiles = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const query: ProfilesPaginatedQuery = {
         page,
-        size,
-        Activo: mapStatusToActivo(status), // true | false
+        size: perPage, // <- usa Redux
+        Activo: mapStatusToActivo(status),
         nombre: description.trim() || undefined,
       };
       const response = await getProfilesPaginatedUC.exec(query);
@@ -135,37 +120,36 @@ const ConsultProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [status, description, page, size]);
+  }, [status, description, page, perPage]);
 
-  // 1) Cargar cuando cambien filtros/paginación
+  // Reset a página 1 al cambiar perPage global
+  useEffect(() => {
+    setPage(1);
+  }, [perPage]);
+
+  // Cargas
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
-
-  // 2) Recargar al entrar a la pantalla
   useEffect(() => {
     fetchProfiles();
   }, [location.key]);
 
-  // Filtrado en cliente (opcional; el server ya filtra por 'activo' y 'nombre')
   const filteredProfiles = useMemo(() => {
     const list = profiles ?? [];
     const text = description.trim().toLowerCase();
-
     return list.filter((p) => {
       const nombre = (p as any).nombre ?? "";
       const descripcion = (p as any).descripcion ?? "";
       const codigo = (p as any).codigo ?? "";
-      const matchesText =
+      return (
         String(nombre).toLowerCase().includes(text) ||
         String(descripcion).toLowerCase().includes(text) ||
-        String(codigo).toLowerCase().includes(text);
-
-      return matchesText;
+        String(codigo).toLowerCase().includes(text)
+      );
     });
   }, [description, profiles]);
 
-  // Fallback de visualización
   const displayed =
     filteredProfiles.length > 0
       ? filteredProfiles
@@ -178,20 +162,17 @@ const ConsultProfile = () => {
     (lastNonEmpty ?? []).length > 0 &&
     description.trim().length > 0;
 
-  const canPrev = page > 1;
-  const canNext = page < totalPages;
+  // const canPrev = page > 1;
+  // const canNext = page < totalPages;
 
   const handleDeleteProfile = async (id: number) => {
-    // ⬇️ usa .exec del caso de uso, no .execute
     const promise = deleteProfileUC.exec(id);
     await toast.promise(promise, {
       loading: "Eliminando perfil...",
       success: "¡Perfil eliminado correctamente!",
       error: "Error en el servidor.",
     });
-    // Ajustar página si borraste el último registro visible
     setPage((p) => ((displayed ?? []).length === 1 && p > 1 ? p - 1 : p));
-    // Recargar la tabla después de eliminar
     fetchProfiles();
   };
 
@@ -228,9 +209,8 @@ const ConsultProfile = () => {
         </div>
       </div>
 
-      {/* Estado / Registros por página */}
+      {/* Estado */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Estado */}
         <div className="flex flex-col gap-1.5 min-w-0">
           <Label htmlFor="estado" className="text-xs sm:text-sm text-muted-foreground">
             Estado
@@ -248,35 +228,6 @@ const ConsultProfile = () => {
             <SelectContent>
               <SelectItem value="activo">Activo</SelectItem>
               <SelectItem value="inactivo">Inactivo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* placeholder para futuras opciones */}
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <Label className="text-xs sm:text-sm text-muted-foreground invisible">placeholder</Label>
-          <div className="h-10" />
-        </div>
-
-        {/* Registros por página */}
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <Label htmlFor="size" className="text-xs sm:text-sm text-muted-foreground">
-            Registros por página
-          </Label>
-          <Select
-            value={String(size)}
-            onValueChange={(v) => {
-              setSize(Number(v));
-              setPage(1);
-            }}
-          >
-            <SelectTrigger id="size" className="h-10 w-full tabular-nums">
-              <SelectValue placeholder="Tamaño" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -355,63 +306,14 @@ const ConsultProfile = () => {
         </div>
       )}
 
-      {/* Paginador */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          Mostrando <span className="font-medium">{rangeStart}</span> –{" "}
-          <span className="font-medium">{rangeEnd}</span> de{" "}
-          <span className="font-medium">{total}</span> registros
-        </p>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(1)}
-            disabled={!canPrev || loading}
-            className="gap-1"
-          >
-            <ChevronsLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Primera</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={!canPrev || loading}
-            className="gap-1"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Anterior</span>
-          </Button>
-
-          <span className="text-sm text-muted-foreground">
-            Página <span className="font-medium">{page}</span> de{" "}
-            <span className="font-medium">{totalPages}</span>
-          </span>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={!canNext || loading}
-            className="gap-1"
-          >
-            <ChevronRight className="h-4 w-4" />
-            <span className="hidden sm:inline">Siguiente</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(totalPages)}
-            disabled={!canNext || loading}
-            className="gap-1"
-          >
-            <ChevronsRight className="h-4 w-4" />
-            <span className="hidden sm:inline">Última</span>
-          </Button>
-        </div>
-      </div>
+      {/* Paginación reutilizable */}
+      <PaginationBar
+        total={total}
+        page={page}
+        onPageChange={setPage}
+        isLoading={loading}
+        className="mt-2"
+      />
     </div>
   );
 };
