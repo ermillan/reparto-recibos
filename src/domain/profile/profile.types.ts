@@ -7,6 +7,7 @@ export interface ProfileItem {
   peso: number; // prioridad/orden
   activo: boolean; // true/false
   estado: "Activo" | "Inactivo";
+  menu: any;
 }
 
 // Metadatos de paginación
@@ -75,6 +76,7 @@ export interface UpdateProfileDto {
 }
 
 export interface UpdateProfilePayload {
+  id: number;
   nombre: string;
   descripcion: string;
   activo: boolean;

@@ -1,4 +1,3 @@
-// presentation/pages/CreateProfile.tsx
 import React, { useEffect, useState, Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -244,13 +243,15 @@ const CreateProfile: React.FC = () => {
 
       if (isEdit && id) {
         const payload: UpdateProfilePayload = {
+          id: Number(id),
           nombre: name.trim(),
           descripcion: description.trim(),
           activo: status === "active",
           opcionIds,
         };
 
-        toast.promise(updateUseCase.execute(Number(id), payload), {
+        // ✅ Esperar el update ANTES de navegar
+        await toast.promise(updateUseCase.execute(Number(id), payload), {
           loading: "Actualizando perfil...",
           success: "¡Perfil actualizado correctamente!",
           error: (err) =>
@@ -278,7 +279,9 @@ const CreateProfile: React.FC = () => {
         });
       }
 
-      navigate(-1);
+      // ✅ Navega SIEMPRE a la lista (evita navigate(-1))
+      navigate("/seguridad/perfiles");
+      // Si quieres “bustear” cache del router: navigate(`/seguridad/perfiles?r=${Date.now()}`)
     } catch (e: any) {
       console.error(e);
       setError(
@@ -298,7 +301,11 @@ const CreateProfile: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl font-semibold text-primary">Accesos del Perfil</h1>
-        <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate(-1)}>
+        <Button
+          variant="outline"
+          className="flex items-center gap-2"
+          onClick={() => navigate("/seguridad/perfiles")}
+        >
           <ArrowLeft className="h-4 w-4" />
           Atrás
         </Button>

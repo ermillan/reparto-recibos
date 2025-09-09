@@ -28,7 +28,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
@@ -92,15 +92,15 @@ const SkeletonTable = () => (
 );
 
 const ConsultProfiles = () => {
-  // const navigate = useNavigate();
+  const location = useLocation();
 
   // Datos y fallback
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [lastNonEmpty, setLastNonEmpty] = useState<ProfileItem[]>([]);
 
-  // Filtros
+  // Filtros: SOLO activo/inactivo; por defecto "activo"
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<"all" | "activo" | "inactivo">("activo");
+  const [status, setStatus] = useState<"activo" | "inactivo">("activo");
 
   // Paginación (server)
   const [page, setPage] = useState(1);
@@ -115,21 +115,17 @@ const ConsultProfiles = () => {
   const rangeStart = total === 0 ? 0 : (page - 1) * size + 1;
   const rangeEnd = Math.min(page * size, total);
 
-  const mapStatusToActivo = (s: "all" | "activo" | "inactivo"): boolean | undefined => {
-    if (s === "activo") return true;
-    if (s === "inactivo") return false;
-    return undefined;
-  };
+  // Mapea el estado del filtro a boolean estricto para el backend
+  const mapStatusToActivo = (s: "activo" | "inactivo"): boolean => s === "activo";
 
-  // Carga desde backend — extraído para reusar tras delete
+  // Carga desde backend — extraído para reusar tras delete o navegación
   const fetchProfiles = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const query = {
-        // Evita enviar params "undefined" si tu repo no los omite automáticamente
-        activo: mapStatusToActivo(status),
-        nombre: description.trim() || undefined,
+        activo: mapStatusToActivo(status), // true | false
+        nombre: description.trim() || undefined, // omite si vacío
         page,
         size,
       };
@@ -145,11 +141,17 @@ const ConsultProfiles = () => {
     }
   }, [status, description, page, size]);
 
+  // 1) Cargar cuando cambien filtros/paginación
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
 
-  // Filtrado en cliente (si tu API ya filtra por nombre/activo, esto es opcional)
+  // 2) Forzar recarga FRESCA cada vez que entras a esta pantalla (tras navegar)
+  useEffect(() => {
+    fetchProfiles();
+  }, [location.key]);
+
+  // Filtrado en cliente (opcional; la API ya filtra por 'activo')
   const filteredProfiles = useMemo(() => {
     const list = profiles ?? [];
     const text = description.trim().toLowerCase();
@@ -160,14 +162,10 @@ const ConsultProfiles = () => {
         (p.descripcion ?? "").toLowerCase().includes(text) ||
         (p.codigo ?? "").toLowerCase().includes(text);
 
-      const matchesStatus =
-        status === "all" ||
-        (status === "activo" && p.activo) ||
-        (status === "inactivo" && !p.activo);
-
-      return matchesText && matchesStatus;
+      // matchesStatus realmente es redundante: el server ya aplicó 'activo'
+      return matchesText;
     });
-  }, [description, status, profiles]);
+  }, [description, profiles]);
 
   // Fallback de visualización
   const displayed =
@@ -178,9 +176,7 @@ const ConsultProfiles = () => {
         : filteredProfiles;
 
   const noExactMatches =
-    filteredProfiles.length === 0 &&
-    lastNonEmpty.length > 0 &&
-    (description.trim().length > 0 || status !== "all");
+    filteredProfiles.length === 0 && lastNonEmpty.length > 0 && description.trim().length > 0;
 
   const canPrev = page > 1;
   const canNext = page < totalPages;
@@ -192,6 +188,8 @@ const ConsultProfiles = () => {
       success: "¡Perfil eliminado correctamente!",
       error: "Error en el servidor.",
     });
+    // Ajustar página si borraste el último registro visible
+    setPage((p) => (displayed.length === 1 && p > 1 ? p - 1 : p));
     // Recargar la tabla después de eliminar
     fetchProfiles();
   };
@@ -238,7 +236,7 @@ const ConsultProfiles = () => {
           </Label>
           <Select
             value={status}
-            onValueChange={(v: "all" | "activo" | "inactivo") => {
+            onValueChange={(v: "activo" | "inactivo") => {
               setStatus(v);
               setPage(1);
             }}
@@ -247,7 +245,6 @@ const ConsultProfiles = () => {
               <SelectValue placeholder="Seleccione estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="activo">Activo</SelectItem>
               <SelectItem value="inactivo">Inactivo</SelectItem>
             </SelectContent>
