@@ -16,32 +16,34 @@ import { toast } from "sonner";
 
 import {
   GetAccessOptions,
-  CreateProfile as CreateProfileUseCase,
-  GetProfileById as GetProfileByIdUseCase,
-  UpdateProfileById as UpdateProfileUseCase,
-} from "@/application/profile";
-import { ProfileApi } from "@/infrastructure/services/profile/profile.api";
-import type {
-  CreateProfileDto,
-  UpdateProfilePayload,
-  ProfileMenuItem,
-} from "@/domain/profile/profile.types";
+  CreateProfile,
+  GetProfileById,
+  UpdateProfile,
+} from "@/application/profiles";
 
-// ===== Helpers árbol =====
-const deepCloneMenu = (items: ProfileMenuItem[]): ProfileMenuItem[] =>
+import type {
+  CreateProfileRequest,
+  UpdateProfileRequest,
+  ProfileMenuOption,
+} from "@/domain/profiles/profile.types";
+import { ProfileApi } from "@/infrastructure/services/recibos.api";
+
+/* ===================== Helpers árbol ===================== */
+
+const deepCloneMenu = (items: ProfileMenuOption[]): ProfileMenuOption[] =>
   (items ?? []).map((i) => ({ ...i, sub: deepCloneMenu(i.sub ?? []) }));
 
-const setCheckDeep = (item: ProfileMenuItem, checked: boolean): ProfileMenuItem => ({
+const setCheckDeep = (item: ProfileMenuOption, checked: boolean): ProfileMenuOption => ({
   ...item,
   check: checked,
   sub: (item.sub ?? []).map((ch) => setCheckDeep(ch, checked)),
 });
 
 const toggleNodeById = (
-  nodes: ProfileMenuItem[],
+  nodes: ProfileMenuOption[],
   id: number,
   mode: "self" | "self+children"
-): ProfileMenuItem[] =>
+): ProfileMenuOption[] =>
   nodes.map((node) => {
     if (node.id === id) {
       const newCheck = !node.check;
@@ -50,10 +52,9 @@ const toggleNodeById = (
     return node.sub?.length ? { ...node, sub: toggleNodeById(node.sub, id, mode) } : node;
   });
 
-// Construye un mapa id -> check desde el menú del perfil (respuesta del backend)
-const indexChecksFromProfile = (nodes: ProfileMenuItem[] | undefined) => {
+const indexChecksFromProfile = (nodes: ProfileMenuOption[] | undefined) => {
   const map = new Map<number, boolean>();
-  const walk = (n: ProfileMenuItem) => {
+  const walk = (n: ProfileMenuOption) => {
     map.set(n.id, !!n.check);
     (n.sub ?? []).forEach(walk);
   };
@@ -61,48 +62,49 @@ const indexChecksFromProfile = (nodes: ProfileMenuItem[] | undefined) => {
   return map;
 };
 
-// Aplica checks de un mapa al árbol base
 const applyChecksToBase = (
-  base: ProfileMenuItem[],
+  base: ProfileMenuOption[],
   checks: Map<number, boolean>
-): ProfileMenuItem[] =>
+): ProfileMenuOption[] =>
   base.map((n) => ({
     ...n,
     check: checks.has(n.id) ? !!checks.get(n.id) : !!n.check,
     sub: applyChecksToBase(n.sub ?? [], checks),
   }));
 
-// Recolecta IDs solo si el nodo y TODOS sus ancestros están marcados (para guardar)
-const collectCheckedIds = (nodes: ProfileMenuItem[], ancestorsChecked = true): number[] => {
+const collectCheckedIds = (nodes: ProfileMenuOption[], ancestorsChecked = true): number[] => {
   const ids: number[] = [];
   nodes.forEach((n) => {
     const currentAllowed = ancestorsChecked && !!n.check;
     if (currentAllowed) ids.push(n.id);
-    if (n.sub?.length) {
-      ids.push(...collectCheckedIds(n.sub, currentAllowed));
-    }
+    if (n.sub?.length) ids.push(...collectCheckedIds(n.sub, currentAllowed));
   });
   return ids;
 };
 
-const allChildrenChecked = (item: ProfileMenuItem): boolean =>
-  (item.sub ?? []).length > 0 && item.sub.every((ch) => ch.check && allChildrenChecked(ch));
+const allChildrenChecked = (item: ProfileMenuOption): boolean =>
+  Array.isArray(item.sub) &&
+  item.sub.length > 0 &&
+  item.sub.every((ch) => ch.check && allChildrenChecked(ch));
 
-// ===== Instancias de casos de uso =====
+/* ===================== Casos de uso / API ===================== */
+
 const api = new ProfileApi();
 const accessUseCase = new GetAccessOptions(api);
-const createUseCase = new CreateProfileUseCase(api);
-const getProfileByIdUseCase = new GetProfileByIdUseCase(api);
-const updateUseCase = new UpdateProfileUseCase(api);
+const createUseCase = new CreateProfile(api);
+const getProfileByIdUseCase = new GetProfileById(api);
+const updateUseCase = new UpdateProfile(api);
 
-const CreateProfile: React.FC = () => {
+/* ===================== Componente ===================== */
+
+const CreateProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
 
   // Form
-  const [name, setName] = useState(""); // nombre
-  const [description, setDescription] = useState(""); // descripción
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"active" | "inactive">("active");
 
   // UI
@@ -111,16 +113,20 @@ const CreateProfile: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Accesos
-  const [menu, setMenu] = useState<ProfileMenuItem[]>([]);
+  const [menu, setMenu] = useState<ProfileMenuOption[]>([]);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
+  // Carga inicial (accesos + perfil en paralelo)
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       setError(null);
       try {
-        // 1) Obtener menú base
-        const access = await accessUseCase.execute(); // { menu: [...] }
+        const [access, profile] = await Promise.all([
+          accessUseCase.exec(), // { menu: [...] }
+          isEdit && id ? getProfileByIdUseCase.exec(Number(id)) : Promise.resolve(null),
+        ]);
+
         const base = deepCloneMenu(access.menu ?? []);
 
         // expandir primer nivel
@@ -129,25 +135,29 @@ const CreateProfile: React.FC = () => {
           defaultExpanded[m.id] = true;
         });
 
-        // 2) Si edit, traer perfil y aplicar datos + checks
-        if (isEdit && id) {
-          const profile = await getProfileByIdUseCase.execute(Number(id));
+        if (profile) {
+          // precarga de campos
           setName(profile.nombre ?? "");
           setDescription(profile.descripcion ?? "");
           setStatus(profile.activo ? "active" : "inactive");
 
-          const checksMap = indexChecksFromProfile(profile.menu);
+          // aplicar checks al árbol base
+          const checksMap = indexChecksFromProfile(profile.menu ?? []);
           const merged = applyChecksToBase(base, checksMap);
-
           setMenu(merged);
-          setExpanded(defaultExpanded);
         } else {
           setMenu(base);
-          setExpanded(defaultExpanded);
         }
+
+        setExpanded(defaultExpanded);
       } catch (e: any) {
         console.error(e);
-        setError("No se pudo cargar la información necesaria.");
+        setError(
+          e?.response?.data?.title ||
+            e?.response?.data?.message ||
+            e?.message ||
+            "No se pudo cargar la información necesaria."
+        );
       } finally {
         setLoading(false);
       }
@@ -160,22 +170,18 @@ const CreateProfile: React.FC = () => {
     setExpanded((prev) => ({ ...prev, [nodeId]: !prev[nodeId] }));
   };
 
-  const handleToggleCheck = (node: ProfileMenuItem, cascade = true) => {
+  const handleToggleCheck = (node: ProfileMenuOption, cascade = true) => {
     setMenu((prev) => toggleNodeById(prev, node.id, cascade ? "self+children" : "self"));
   };
 
-  // Nodo del árbol con herencia de “habilitado/deshabilitado” desde el padre
-  const TreeNode: React.FC<{ node: ProfileMenuItem; ancestorsChecked?: boolean }> = ({
+  const TreeNode: React.FC<{ node: ProfileMenuOption; ancestorsChecked?: boolean }> = ({
     node,
     ancestorsChecked = true,
   }) => {
     const hasChildren = (node.sub?.length ?? 0) > 0;
     const isOpen = expanded[node.id] ?? false;
 
-    // Si algún ancestro está desmarcado, este nodo (y sus hijos) quedan deshabilitados
-    const disabled = !ancestorsChecked;
-
-    // Para hijos: habilitados si ancestros (incluido el padre) están marcados
+    const disabled = !ancestorsChecked || loading || saving;
     const nextAncestorsChecked = ancestorsChecked && !!node.check;
 
     return (
@@ -198,9 +204,7 @@ const CreateProfile: React.FC = () => {
             id={`menu-${node.id}`}
             checked={!!node.check}
             disabled={disabled}
-            onCheckedChange={() => {
-              if (!disabled) handleToggleCheck(node, true); // padre → hijos
-            }}
+            onCheckedChange={() => !disabled && handleToggleCheck(node, true)}
           />
           <Label
             htmlFor={`menu-${node.id}`}
@@ -242,7 +246,7 @@ const CreateProfile: React.FC = () => {
       const opcionIds = collectCheckedIds(menu);
 
       if (isEdit && id) {
-        const payload: UpdateProfilePayload = {
+        const payload: UpdateProfileRequest = {
           id: Number(id),
           nombre: name.trim(),
           descripcion: description.trim(),
@@ -250,8 +254,7 @@ const CreateProfile: React.FC = () => {
           opcionIds,
         };
 
-        // ✅ Esperar el update ANTES de navegar
-        await toast.promise(updateUseCase.execute(Number(id), payload), {
+        await toast.promise(updateUseCase.exec(payload), {
           loading: "Actualizando perfil...",
           success: "¡Perfil actualizado correctamente!",
           error: (err) =>
@@ -261,14 +264,14 @@ const CreateProfile: React.FC = () => {
             "Error en el servidor.",
         });
       } else {
-        const payload: CreateProfileDto = {
+        const payload: CreateProfileRequest = {
           nombre: name.trim(),
           descripcion: description.trim(),
           activo: status === "active",
           opcionIds,
         };
 
-        await toast.promise(createUseCase.execute(payload), {
+        await toast.promise(createUseCase.exec(payload), {
           loading: "Creando perfil...",
           success: "¡Perfil creado correctamente!",
           error: (err) =>
@@ -279,9 +282,7 @@ const CreateProfile: React.FC = () => {
         });
       }
 
-      // ✅ Navega SIEMPRE a la lista (evita navigate(-1))
       navigate("/seguridad/perfiles");
-      // Si quieres “bustear” cache del router: navigate(`/seguridad/perfiles?r=${Date.now()}`)
     } catch (e: any) {
       console.error(e);
       setError(
@@ -295,16 +296,21 @@ const CreateProfile: React.FC = () => {
     }
   };
 
+  const formDisabled = loading || saving;
+  const pageTitle = isEdit ? `Editar perfil #${id}` : "Crear nuevo perfil";
+  const buttonLabel = isEdit ? "Actualizar" : "Crear";
+
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      <h1>{isEdit ? `Editar perfil #${id}` : "Crear nuevo perfil"}</h1>
+      <h1 className="text-xl font-semibold text-primary">{pageTitle}</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-xl font-semibold text-primary">Accesos del Perfil</h1>
+        <h2 className="text-lg font-semibold">Accesos del Perfil</h2>
         <Button
           variant="outline"
           className="flex items-center gap-2"
           onClick={() => navigate("/seguridad/perfiles")}
+          disabled={saving}
         >
           <ArrowLeft className="h-4 w-4" />
           Atrás
@@ -321,7 +327,7 @@ const CreateProfile: React.FC = () => {
         {/* Columna izquierda */}
         <div className="rounded-md border p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Datos</h2>
+            <h3 className="font-semibold">Datos</h3>
             {loading && (
               <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Cargando...
@@ -336,7 +342,7 @@ const CreateProfile: React.FC = () => {
               placeholder="Ingrese nombre"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={loading || saving}
+              disabled={formDisabled}
             />
           </div>
 
@@ -347,7 +353,7 @@ const CreateProfile: React.FC = () => {
               placeholder="Ingrese la descripción"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              disabled={loading || saving}
+              disabled={formDisabled}
             />
           </div>
 
@@ -356,7 +362,7 @@ const CreateProfile: React.FC = () => {
             <Select
               value={status}
               onValueChange={(v: "active" | "inactive") => setStatus(v)}
-              disabled={loading || saving}
+              disabled={formDisabled}
             >
               <SelectTrigger id="estado" className="w-full">
                 <SelectValue placeholder="Seleccione estado" />
@@ -372,7 +378,7 @@ const CreateProfile: React.FC = () => {
         {/* Columna derecha - Accesos dinámicos */}
         <div className="rounded-md border p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Accesos</h2>
+            <h3 className="font-semibold">Accesos</h3>
             {loading && (
               <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Cargando accesos...
@@ -395,17 +401,13 @@ const CreateProfile: React.FC = () => {
       </div>
 
       <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={saving || loading}
-          className="flex items-center gap-2"
-        >
+        <Button onClick={handleSave} disabled={formDisabled} className="flex items-center gap-2">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {isEdit ? "Actualizar" : "Crear"}
+          {buttonLabel}
         </Button>
       </div>
     </div>
   );
 };
 
-export default CreateProfile;
+export default CreateProfilePage;

@@ -32,27 +32,24 @@ import { NavLink, useLocation } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-import { ProfileApi } from "@/infrastructure/services/profile/profile.api";
-import { GetProfiles } from "@/application/profile/getProfiles.usecase";
-import { DeleteProfileById } from "@/application/profile";
+// ⬇️ Mantengo tu import de API como lo tienes
+import { ProfileApi } from "@/infrastructure/services/recibos.api";
 
-// Tipos (usa tus tipos reales si ya los tienes)
-type ProfileItem = {
-  id: number;
-  codigo: string;
-  nombre: string;
-  descripcion: string;
-  peso: number;
-  activo: boolean;
-  estado: "Activo" | "Inactivo";
-};
+// ⬇️ Usamos los casos de uso correctos
+import { DeleteProfile, GetProfilesPaginated } from "@/application/profiles";
+
+// ⬇️ Tipos del dominio que ya te compartí
+import type {
+  ProfilesPaginatedQuery,
+  ProfilesPaginatedResponse,
+} from "@/domain/profiles/profile.types";
 
 const ROWS_SKELETON = 3;
 
 // Instancias compartidas
 const profileApi = new ProfileApi();
-const getProfilesUC = new GetProfiles(profileApi);
-const deleteProfileUC = new DeleteProfileById(profileApi);
+const getProfilesPaginatedUC = new GetProfilesPaginated(profileApi);
+const deleteProfileUC = new DeleteProfile(profileApi);
 
 const SkeletonTable = () => (
   <div className="rounded-md border overflow-x-auto">
@@ -91,14 +88,14 @@ const SkeletonTable = () => (
   </div>
 );
 
-const ConsultProfiles = () => {
+const ConsultProfile = () => {
   const location = useLocation();
 
-  // Datos y fallback
-  const [profiles, setProfiles] = useState<ProfileItem[]>([]);
-  const [lastNonEmpty, setLastNonEmpty] = useState<ProfileItem[]>([]);
+  // Datos (tipados con la respuesta paginada del dominio)
+  const [profiles, setProfiles] = useState<ProfilesPaginatedResponse["items"]>([]);
+  const [lastNonEmpty, setLastNonEmpty] = useState<ProfilesPaginatedResponse["items"]>([]);
 
-  // Filtros: SOLO activo/inactivo; por defecto "activo"
+  // Filtros
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"activo" | "inactivo">("activo");
 
@@ -118,20 +115,20 @@ const ConsultProfiles = () => {
   // Mapea el estado del filtro a boolean estricto para el backend
   const mapStatusToActivo = (s: "activo" | "inactivo"): boolean => s === "activo";
 
-  // Carga desde backend — extraído para reusar tras delete o navegación
+  // Carga desde backend — usando el UC paginado + tipos del dominio
   const fetchProfiles = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const query = {
-        activo: mapStatusToActivo(status), // true | false
-        nombre: description.trim() || undefined, // omite si vacío
+      const query: ProfilesPaginatedQuery = {
         page,
         size,
+        Activo: mapStatusToActivo(status), // true | false
+        nombre: description.trim() || undefined,
       };
-      const response = await getProfilesUC.execute(query as any);
-      setProfiles(response.items);
-      setTotal(response.meta.total);
+      const response = await getProfilesPaginatedUC.exec(query);
+      setProfiles(response.items ?? []);
+      setTotal(response.meta?.total ?? 0);
       if (response.items?.length) setLastNonEmpty(response.items);
     } catch (err) {
       console.error("Error cargando perfiles", err);
@@ -146,23 +143,25 @@ const ConsultProfiles = () => {
     fetchProfiles();
   }, [fetchProfiles]);
 
-  // 2) Forzar recarga FRESCA cada vez que entras a esta pantalla (tras navegar)
+  // 2) Recargar al entrar a la pantalla
   useEffect(() => {
     fetchProfiles();
   }, [location.key]);
 
-  // Filtrado en cliente (opcional; la API ya filtra por 'activo')
+  // Filtrado en cliente (opcional; el server ya filtra por 'activo' y 'nombre')
   const filteredProfiles = useMemo(() => {
     const list = profiles ?? [];
     const text = description.trim().toLowerCase();
 
     return list.filter((p) => {
+      const nombre = (p as any).nombre ?? "";
+      const descripcion = (p as any).descripcion ?? "";
+      const codigo = (p as any).codigo ?? "";
       const matchesText =
-        (p.nombre ?? "").toLowerCase().includes(text) ||
-        (p.descripcion ?? "").toLowerCase().includes(text) ||
-        (p.codigo ?? "").toLowerCase().includes(text);
+        String(nombre).toLowerCase().includes(text) ||
+        String(descripcion).toLowerCase().includes(text) ||
+        String(codigo).toLowerCase().includes(text);
 
-      // matchesStatus realmente es redundante: el server ya aplicó 'activo'
       return matchesText;
     });
   }, [description, profiles]);
@@ -171,25 +170,28 @@ const ConsultProfiles = () => {
   const displayed =
     filteredProfiles.length > 0
       ? filteredProfiles
-      : lastNonEmpty.length > 0
+      : (lastNonEmpty ?? []).length > 0
         ? lastNonEmpty
         : filteredProfiles;
 
   const noExactMatches =
-    filteredProfiles.length === 0 && lastNonEmpty.length > 0 && description.trim().length > 0;
+    filteredProfiles.length === 0 &&
+    (lastNonEmpty ?? []).length > 0 &&
+    description.trim().length > 0;
 
   const canPrev = page > 1;
   const canNext = page < totalPages;
 
   const handleDeleteProfile = async (id: number) => {
-    const promise = deleteProfileUC.execute(id);
+    // ⬇️ usa .exec del caso de uso, no .execute
+    const promise = deleteProfileUC.exec(id);
     await toast.promise(promise, {
       loading: "Eliminando perfil...",
       success: "¡Perfil eliminado correctamente!",
       error: "Error en el servidor.",
     });
     // Ajustar página si borraste el último registro visible
-    setPage((p) => (displayed.length === 1 && p > 1 ? p - 1 : p));
+    setPage((p) => ((displayed ?? []).length === 1 && p > 1 ? p - 1 : p));
     // Recargar la tabla después de eliminar
     fetchProfiles();
   };
@@ -319,14 +321,14 @@ const ConsultProfiles = () => {
                     {error}
                   </TableCell>
                 </TableRow>
-              ) : displayed.length === 0 ? (
+              ) : (displayed ?? []).length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
                     No se encontraron resultados
                   </TableCell>
                 </TableRow>
               ) : (
-                displayed.map((p) => (
+                (displayed ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell>{p.codigo?.trim?.() ?? p.codigo}</TableCell>
                     <TableCell>{p.nombre}</TableCell>
@@ -423,4 +425,4 @@ const ConsultProfiles = () => {
   );
 };
 
-export default ConsultProfiles;
+export default ConsultProfile;

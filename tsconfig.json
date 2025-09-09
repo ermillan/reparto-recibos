@@ -10,6 +10,7 @@
   ],
   "compilerOptions": {
     "declaration": false,
+    "erasableSyntaxOnly": false,
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {

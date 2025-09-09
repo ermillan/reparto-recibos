@@ -1,8 +1,5 @@
 import { FaUser } from "react-icons/fa";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
-import { AuthApi } from "@/infrastructure/services/auth/auth.api";
-
-import logoCalidda from "@/assets/logo_calidda.png";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,20 +20,23 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { LoginUseCase } from "@/application/auth/login.usecase";
 import { useAuth } from "@/hooks/use-auth";
 
-// Interfaces for props to improve type safety and readability
-type LoginHeaderProps = {
-  isForgotPassword: boolean;
-};
+// ⬇️ Casos de uso hexagonales
+import {
+  Login as LoginUseCase,
+  ForgotPassword as ForgotPasswordUseCase,
+  VerifyRecovery as VerifyRecoveryUseCase,
+} from "@/application/auth";
+import { AuthApi } from "@/infrastructure/services/recibos.api";
 
+// Tipos de props
+type LoginHeaderProps = { isForgotPassword: boolean };
 type LoginFormProps = {
   visiblePass: boolean;
   setVisiblePass: React.Dispatch<React.SetStateAction<boolean>>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
-
 type ForgotPasswordFormProps = {
   isOtpSent: boolean;
   email: string;
@@ -46,20 +46,23 @@ type ForgotPasswordFormProps = {
   handleOtpChange: (value: string) => void;
   handleResend: () => void;
 };
-
 type LoginFooterProps = {
   isForgotPassword: boolean;
   isOtpSent: boolean;
   setIsForgotPassword: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+// Instancias de repo + casos de uso
 const authRepo = new AuthApi();
 const loginUseCase = new LoginUseCase(authRepo);
+const forgotPasswordUseCase = new ForgotPasswordUseCase(authRepo);
+const verifyRecoveryUseCase = new VerifyRecoveryUseCase(authRepo);
 
-// Shared Header component
+// Header
 const LoginHeader: React.FC<LoginHeaderProps> = ({ isForgotPassword }) => (
   <CardHeader className="flex flex-col items-center">
-    <img src={logoCalidda} alt="Logo de Calidda" className="h-11 w-auto object-cover mb-4" />
+    {/* coloca tu logo */}
+    {/* <img src={logoCalidda} alt="Logo" className="h-11 w-auto object-cover mb-4" /> */}
     <CardDescription className="text-center text-gray-700 text-md font-semibold mb-2">
       Sistema de Reparto de Recibos
     </CardDescription>
@@ -69,7 +72,7 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ isForgotPassword }) => (
   </CardHeader>
 );
 
-// Login form component
+// Form Login
 const LoginForm: React.FC<LoginFormProps> = ({ visiblePass, setVisiblePass, handleChange }) => (
   <>
     <div className="grid w-full items-center gap-2">
@@ -78,10 +81,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ visiblePass, setVisiblePass, hand
         type="text"
         id="username"
         name="username"
-        placeholder=""
         onChange={handleChange}
         icon={
-          <FaUser className="cursor-pointer text-md hover:text-primary-500 transition-colors ease-in-out duration-300" />
+          <FaUser className="cursor-pointer text-md hover:text-primary-500 transition-colors" />
         }
       />
     </div>
@@ -91,17 +93,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ visiblePass, setVisiblePass, hand
         type={visiblePass ? "text" : "password"}
         id="password"
         name="password"
-        placeholder=""
         onChange={handleChange}
         icon={
           visiblePass ? (
             <IoIosEyeOff
-              className="cursor-pointer text-xl hover:text-primary-500 transition-colors ease-in-out duration-300"
+              className="cursor-pointer text-xl hover:text-primary-500 transition-colors"
               onClick={() => setVisiblePass((prev) => !prev)}
             />
           ) : (
             <IoIosEye
-              className="cursor-pointer text-xl hover:text-primary-500 transition-colors ease-in-out duration-300"
+              className="cursor-pointer text-xl hover:text-primary-500 transition-colors"
               onClick={() => setVisiblePass((prev) => !prev)}
             />
           )
@@ -111,7 +112,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ visiblePass, setVisiblePass, hand
   </>
 );
 
-// Forgot password form component with countdown timer display
+// Form Forgot Password
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   isOtpSent,
   email,
@@ -121,24 +122,16 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   handleOtpChange,
   handleResend,
 }) => {
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${String(m).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
   };
-
   return (
     <>
       <div className="grid w-full items-center gap-2">
-        <Label htmlFor="email">Ingrese su correo electrónico:</Label>
-        <Input
-          type="email"
-          id="email"
-          name="email"
-          placeholder=""
-          value={email}
-          onChange={handleEmailChange}
-        />
+        <Label htmlFor="email">Ingrese su correo o usuario:</Label>
+        <Input type="text" id="email" name="email" value={email} onChange={handleEmailChange} />
       </div>
       {isOtpSent && (
         <div className="grid w-full items-center gap-2">
@@ -173,7 +166,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   );
 };
 
-// Footer component with dynamic buttons (now with explicit types to control submission)
+// Footer
 const LoginFooter: React.FC<LoginFooterProps> = ({
   isForgotPassword,
   isOtpSent,
@@ -188,7 +181,7 @@ const LoginFooter: React.FC<LoginFooterProps> = ({
         <Button
           className="w-full font-medium"
           variant="link"
-          type="button" // Prevent form submission
+          type="button"
           onClick={() => setIsForgotPassword(true)}
         >
           ¿Olvidaste tu contraseña?
@@ -202,7 +195,7 @@ const LoginFooter: React.FC<LoginFooterProps> = ({
         <Button
           className="w-auto font-medium"
           variant="link"
-          type="button" // Prevent form submission
+          type="button"
           onClick={() => setIsForgotPassword(false)}
         >
           Ya tengo una cuenta
@@ -212,72 +205,102 @@ const LoginFooter: React.FC<LoginFooterProps> = ({
   </CardFooter>
 );
 
-// Main Login page component (container: manages state and logic)
+// Página
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { loginUser } = useAuth();
+
   const [visiblePass, setVisiblePass] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
+
   const [loginForm, setLoginForm] = useState<{ username: string; password: string }>({
     username: "",
     password: "",
   });
+
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [secondsRemaining, setSecondsRemaining] = useState(300); // 5 minutes = 300 seconds
+  const [secondsRemaining, setSecondsRemaining] = useState(300);
 
-  const { loginUser } = useAuth();
-
-  // Countdown timer effect
+  // Timer para OTP
   useEffect(() => {
     if (isOtpSent && secondsRemaining > 0) {
-      const timer = setInterval(() => {
-        setSecondsRemaining((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(timer);
+      const t = setInterval(() => setSecondsRemaining((prev) => prev - 1), 1000);
+      return () => clearInterval(t);
     }
   }, [isOtpSent, secondsRemaining]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value);
+  const handleOtpChange = (value: string) => setOtp(value);
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  };
-
-  const handleOtpChange = (value: string) => {
-    setOtp(value);
-  };
-
-  const handleResend = () => {
-    // TODO: Implement resend OTP logic
-    // console.log("Resending OTP to:", email)
-    setSecondsRemaining(300); // Reset timer
+  const handleResend = async () => {
+    if (!email.trim()) {
+      toast.error("Ingresa tu usuario/correo para reenviar el OTP.");
+      return;
+    }
+    const promise = forgotPasswordUseCase.exec({ login: email.trim() });
+    await toast.promise(promise, {
+      loading: "Reenviando código...",
+      success: "Se envió un nuevo código a tu correo.",
+      error: "No se pudo reenviar el código.",
+    });
+    setSecondsRemaining(300);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (isForgotPassword) {
-      if (isOtpSent) {
-        // TODO: Implement OTP validation logic
-        // console.log("Validating OTP:", otp)
+      if (!isOtpSent) {
+        // Enviar código
+        if (!email.trim()) {
+          toast.error("Ingresa tu usuario/correo.");
+          return;
+        }
+        const promise = forgotPasswordUseCase.exec({ login: email.trim() });
+        await toast.promise(promise, {
+          loading: "Enviando código...",
+          success: () => {
+            setIsOtpSent(true);
+            setSecondsRemaining(300);
+            return "Código enviado. Revisa tu correo.";
+          },
+          error: "No se pudo enviar el código.",
+        });
       } else {
-        setIsOtpSent(true);
-        setSecondsRemaining(300); // Start timer
+        // Validar código
+        if (!otp.trim()) {
+          toast.error("Ingresa el código OTP.");
+          return;
+        }
+        const promise = verifyRecoveryUseCase.exec({ login: email.trim(), code: otp.trim() });
+        await toast.promise(promise, {
+          loading: "Validando código...",
+          success: "Código validado correctamente.",
+          error: "Código inválido o expirado.",
+        });
+        // Aquí podrías navegar a una pantalla de “restablecer contraseña”
+        // navigate("/reset-password");
       }
-    } else {
-      toast.promise(loginUseCase.execute(loginForm.username, loginForm.password), {
-        loading: "Iniciando sesión...",
-        success: (res) => {
-          loginUser(res);
-          navigate("/dashboard");
-          return `¡Bienvenido ${res.usuario.nombre}!`;
-        },
-        error: "Credenciales inválidas o error en el servidor",
-        position: "top-right",
-      });
+      return;
     }
+
+    // Login normal
+    const payload = { login: loginForm.username.trim(), passwordPlano: loginForm.password };
+    toast.promise(loginUseCase.exec(payload), {
+      loading: "Iniciando sesión...",
+      success: (res: any) => {
+        loginUser(res);
+        navigate("/dashboard");
+        return `¡Bienvenido ${res?.usuario?.nombre ?? ""}!`;
+      },
+      error: "Credenciales inválidas o error en el servidor",
+      position: "top-right",
+    });
   };
 
   return (

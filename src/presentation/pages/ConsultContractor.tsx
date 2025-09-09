@@ -26,22 +26,28 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  PenIcon,
+  Trash2,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { toast } from "sonner";
 
-import { UserApi } from "@/infrastructure/services/user/user.api";
-import { GetUserPaginated } from "@/application/user/getUserPaginated.usecase";
-import { GetContractors } from "@/application/contractor/getContractors.usecase";
-import { ContractorApi } from "@/infrastructure/services/contractor/contractor.api";
+// ✅ Casos de uso (barrels)
+import { DeleteUser, GetUsersPaginated } from "@/application/users";
+import { GetContractors } from "@/application/contractor";
+
+// ✅ Tipos de dominio
+import type { ContractorItem } from "@/domain/contractors/contractor.type";
+import type { UsersQuery } from "@/domain/users/user.types";
+import { ContractorApi, UserApi } from "@/infrastructure/services/recibos.api";
 
 // ========= Instancias de API / UC =========
 const userApi = new UserApi();
 const contractorApi = new ContractorApi();
 
-const getUserPaginated = new GetUserPaginated(userApi);
+const getUserPaginated = new GetUsersPaginated(userApi);
 const getContractors = new GetContractors(contractorApi);
-
-type Contractor = { id: number; nombre: string; activo: boolean };
+const deleteUser = new DeleteUser(userApi);
 
 type UserRow = {
   id: number;
@@ -50,7 +56,7 @@ type UserRow = {
   nombreCompleto: string;
   email: string;
   numeroDocumento: string;
-  idTipoDocumento: number;
+  idTipoDocumento?: number | null;
   activo: boolean;
   bloqueado: boolean;
   primeraVez: boolean;
@@ -79,26 +85,28 @@ const ConsultContractor = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Contratistas
-  const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [contractors, setContractors] = useState<ContractorItem[]>([]);
   const [loadingContractors, setLoadingContractors] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const startIndex = total === 0 ? 0 : (page - 1) * perPage + 1;
   const endIndex = Math.min(page * perPage, total);
 
-  // Si "Todos" -> enviar vacío ""; si no, enviar el id como number
-  const idContratistaParam = useMemo<"" | number>(() => {
-    return contractorFilter === "Todos" ? "" : Number(contractorFilter);
+  // ✅ Si "Todos" → undefined; si no → number
+  const idContratistaParam = useMemo<number | undefined>(() => {
+    return contractorFilter === "Todos" ? undefined : Number(contractorFilter);
   }, [contractorFilter]);
 
   // Cargar contratistas para el select
   const fetchContractors = useCallback(async () => {
     try {
       setLoadingContractors(true);
-      const list = await getContractors.execute(); // retorna Contractor[]
+      const list = await getContractors.exec({ Activo: true }); // retorna Contractor[]
       const ordered = (list ?? [])
-        .filter((c: Contractor) => c.activo)
-        .sort((a: Contractor, b: Contractor) => a.nombre.localeCompare(b.nombre));
+        .filter((c: ContractorItem) => c.activo)
+        .sort((a: ContractorItem, b: ContractorItem) =>
+          (a.nombre ?? "").localeCompare(b.nombre ?? "")
+        );
       setContractors(ordered);
     } catch (e) {
       console.error("No se pudieron cargar contratistas", e);
@@ -112,21 +120,21 @@ const ConsultContractor = () => {
     setLoading(true);
     setError(null);
     try {
-      const query = {
+      const query: UsersQuery = {
         Page: page,
         Size: perPage,
-        Login: userFilter.trim() || "",
-        Nombre: nameFilter.trim() || "",
-        Codigo: "",
-        NumeroDocumento: documentFilter.trim() || "",
+        Login: userFilter.trim() || undefined,
+        Nombre: nameFilter.trim() || undefined,
+        Codigo: undefined,
+        NumeroDocumento: documentFilter.trim() || undefined,
         Activo: statusFilter === "Activo",
-        IdContratista: idContratistaParam, // "" cuando "Todos"
+        IdContratista: idContratistaParam,
         SortBy: sortBy,
         Desc: sortDesc,
       };
 
-      const resp = await getUserPaginated.execute(query as any);
-      setRows(resp.items ?? []);
+      const resp = await getUserPaginated.exec(query);
+      setRows((resp.items ?? []) as UserRow[]);
       setTotal(resp.meta?.total ?? 0);
     } catch (e: any) {
       console.error(e);
@@ -175,6 +183,19 @@ const ConsultContractor = () => {
     setSortBy("Login");
     setSortDesc(true);
     setPage(1);
+  };
+
+  const handleDeleteUser = async (id: number) => {
+    const promise = deleteUser.exec(id);
+    await toast.promise(promise, {
+      loading: "Eliminando usuario...",
+      success: "¡Usuario eliminado correctamente!",
+      error: "Error en el servidor.",
+    });
+
+    // si eliminaste el último de la página, retrocede una página
+    setPage((p) => (rows.length === 1 && p > 1 ? p - 1 : p));
+    fetchUsers();
   };
 
   return (
@@ -252,7 +273,6 @@ const ConsultContractor = () => {
                 <SelectValue placeholder="Contratista" />
               </SelectTrigger>
               <SelectContent
-                // Igualar el ancho al trigger y permitir que “se expanda” en alto
                 className="w-[--radix-select-trigger-width] max-h-64 overflow-auto"
                 position="popper"
                 side="bottom"
@@ -380,18 +400,19 @@ const ConsultContractor = () => {
               <TableHead className="text-white">Estado</TableHead>
               <TableHead className="text-white">Bloqueado</TableHead>
               <TableHead className="text-white">Primera Vez</TableHead>
+              <TableHead className="text-white">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-6 text-center text-muted-foreground">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center text-destructive">
+                <TableCell colSpan={9} className="py-6 text-center text-destructive">
                   {error}
                 </TableCell>
               </TableRow>
@@ -404,17 +425,40 @@ const ConsultContractor = () => {
                     </a>
                   </TableCell>
                   <TableCell className="max-w-[220px] truncate">{u.nombreCompleto}</TableCell>
-                  <TableCell className="">{u.email}</TableCell>
-                  <TableCell className="">{u.codigo}</TableCell>
+                  <TableCell>{u.email}</TableCell>
+                  <TableCell>{u.codigo}</TableCell>
                   <TableCell>{u.numeroDocumento}</TableCell>
                   <TableCell>{u.activo ? "Activo" : "Inactivo"}</TableCell>
-                  <TableCell className="">{u.bloqueado ? "Bloqueado" : "No"}</TableCell>
-                  <TableCell className="">{u.primeraVez ? "Sí" : "No"}</TableCell>
+                  <TableCell>{u.bloqueado ? "Bloqueado" : "No"}</TableCell>
+                  <TableCell>{u.primeraVez ? "Sí" : "No"}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-row gap-2">
+                      <Button
+                        variant="outline"
+                        aria-label="Editar Usuario"
+                        className="transition-colors ease-in-out duration-300 hover:bg-green-50 hover:text-green-700"
+                        asChild
+                      >
+                        {/* ✅ ruta a editar usuario */}
+                        <NavLink to={`/seguridad/contratista/actualizar-contratista/${u.id}`}>
+                          <PenIcon className="h-4 w-4" />
+                        </NavLink>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        aria-label="Eliminar Usuario"
+                        onClick={() => handleDeleteUser(u.id)}
+                        className="transition-colors ease-in-out duration-300 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-4">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-4">
                   No se encontraron resultados
                 </TableCell>
               </TableRow>
