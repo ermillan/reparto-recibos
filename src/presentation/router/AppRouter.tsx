@@ -4,10 +4,10 @@ import Login from "@/presentation/pages/Login";
 import Dashboard from "@/presentation/pages/Dashboard";
 import GuestGuard from "@/presentation/router/middlewares/GuestGuard";
 import DashboardLayout from "@/presentation/layouts/dashboard-layout";
-import SecurityProfile from "@/presentation/pages/SecurityProfile";
 import CreateProfile from "@/presentation/pages/CreateProfile";
 import ConsultContractor from "@/presentation/pages/ConsultContractor";
 import CreateContractor from "@/presentation/pages/CreateContractor";
+import ConsultProfiles from "@/presentation/pages/ConsultProfile";
 
 export default function AppRouter() {
   return (
@@ -26,8 +26,9 @@ export default function AppRouter() {
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
 
-        <Route path="/seguridad/perfiles" element={<SecurityProfile />} />
+        <Route path="/seguridad/perfiles" element={<ConsultProfiles />} />
         <Route path="/seguridad/perfiles/crear-perfil" element={<CreateProfile />} />
+        <Route path="/seguridad/perfiles/actualizar-perfil/:id" element={<CreateProfile />} />
 
         <Route path="/seguridad/contratista" element={<ConsultContractor />} />
         <Route path="/seguridad/contratista/crear-contratista" element={<CreateContractor />} />

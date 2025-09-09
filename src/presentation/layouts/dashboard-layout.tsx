@@ -10,7 +10,7 @@ export default function DashboardLayout() {
         {/* Header del contenido */}
         <header className="sticky top-0 z-20 bg-white/70 backdrop-blur border-b">
           <div className="flex h-14 items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
+            <SidebarTrigger className="-ml-1 border-none" />
             {/* <Separator orientation="vertical" className="mx-2 h-6" /> */}
             <h1 className="text-base sm:text-lg font-semibold text-center">Reparto de Recibos</h1>
           </div>

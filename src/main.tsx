@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <Toaster richColors />
+        <Toaster richColors position="top-right" />
         <BrowserRouter basename="/FrontRepartoRecibos">
           <AppRouter />
         </BrowserRouter>

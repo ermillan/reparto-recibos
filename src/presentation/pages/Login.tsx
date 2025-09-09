@@ -1,6 +1,6 @@
 import { FaUser } from "react-icons/fa";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
-import { AuthApi } from "@/infrastructure/auth/auth.api";
+import { AuthApi } from "@/infrastructure/services/auth/auth.api";
 
 import logoCalidda from "@/assets/logo_calidda.png";
 import { Button } from "@/components/ui/button";
