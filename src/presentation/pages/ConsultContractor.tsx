@@ -374,12 +374,12 @@ const ConsultContractor = () => {
             <TableRow>
               <TableHead className="text-white">Usuario</TableHead>
               <TableHead className="text-white">Nombre</TableHead>
-              <TableHead className="text-white hidden md:table-cell">Email</TableHead>
-              <TableHead className="text-white hidden md:table-cell">Código</TableHead>
+              <TableHead className="text-white">Email</TableHead>
+              <TableHead className="text-white">Código</TableHead>
               <TableHead className="text-white">Documento</TableHead>
               <TableHead className="text-white">Estado</TableHead>
-              <TableHead className="text-white hidden lg:table-cell">Bloqueado</TableHead>
-              <TableHead className="text-white hidden lg:table-cell">Primera Vez</TableHead>
+              <TableHead className="text-white">Bloqueado</TableHead>
+              <TableHead className="text-white">Primera Vez</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -404,16 +404,12 @@ const ConsultContractor = () => {
                     </a>
                   </TableCell>
                   <TableCell className="max-w-[220px] truncate">{u.nombreCompleto}</TableCell>
-                  <TableCell className="hidden md:table-cell">{u.email}</TableCell>
-                  <TableCell className="hidden md:table-cell">{u.codigo}</TableCell>
+                  <TableCell className="">{u.email}</TableCell>
+                  <TableCell className="">{u.codigo}</TableCell>
                   <TableCell>{u.numeroDocumento}</TableCell>
                   <TableCell>{u.activo ? "Activo" : "Inactivo"}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {u.bloqueado ? "Bloqueado" : "No"}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {u.primeraVez ? "Sí" : "No"}
-                  </TableCell>
+                  <TableCell className="">{u.bloqueado ? "Bloqueado" : "No"}</TableCell>
+                  <TableCell className="">{u.primeraVez ? "Sí" : "No"}</TableCell>
                 </TableRow>
               ))
             ) : (
