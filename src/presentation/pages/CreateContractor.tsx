@@ -26,11 +26,9 @@ import type {
 } from "@/domain/users/user.types";
 import type { ContractorItem } from "@/domain/contractors/contractor.type";
 
-// Infra repos (mantengo tu endpoint centralizado)
+// Infra repos
 import { ContractorApi, ProfileApi, UserApi } from "@/infrastructure/services/recibos.api";
 
-// Si tu dominio tiene un tipo explícito para items de perfil, úsalo.
-// Aquí usamos un mínimo compatible:
 type ProfileOption = { id: number; nombre?: string | null };
 
 // Instancias
@@ -44,13 +42,12 @@ const updateUserUC = new UpdateUser(userApi);
 const getContractorsUC = new GetContractors(contractorApi);
 const getProfilesUC = new GetProfiles(profileApi);
 
-// Reglas de validación (regex)
 const regex = {
-  nombre: /^[a-zA-ZÀ-ÿ\s]{2,40}$/, // solo letras, 2-40 chars
-  usuario: /^[a-zA-Z0-9_]{4,16}$/, // letras, números, guión bajo
-  documento: /^[0-9]{8}$/, // 8 dígitos
-  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // formato email
-  celular: /^[0-9]{9}$/, // 9 dígitos
+  nombre: /^[a-zA-ZÀ-ÿ\s]{2,40}$/,
+  usuario: /^[a-zA-Z0-9_]{4,16}$/,
+  documento: /^[0-9]{8}$/,
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  celular: /^[0-9]{9}$/,
 };
 
 const CreateContractor = () => {
@@ -74,14 +71,30 @@ const CreateContractor = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Opciones desde backend
   const [contractors, setContractors] = useState<ContractorItem[]>([]);
   const [selectedContractorId, setSelectedContractorId] = useState<number | null>(null);
 
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
-  // Carga inicial: contratistas + perfiles + (si edita) usuario
+  // Genera usuario automáticamente en modo crear
+  useEffect(() => {
+    if (!isEdit) {
+      const inicialNombre = form.nombre.trim().charAt(0).toUpperCase();
+      const inicialApellido = form.apellidoPaterno.trim().charAt(0).toUpperCase();
+      const usuarioGenerado =
+        inicialNombre && inicialApellido && form.documento
+          ? `${inicialNombre}${inicialApellido}${form.documento}`
+          : "";
+
+      setForm((prev) => ({
+        ...prev,
+        usuario: usuarioGenerado,
+      }));
+    }
+  }, [form.nombre, form.apellidoPaterno, form.documento, isEdit]);
+
+  // Carga inicial
   useEffect(() => {
     (async () => {
       try {
@@ -92,20 +105,14 @@ const CreateContractor = () => {
           isEdit && id ? getUserByIdUC.exec(Number(id)) : Promise.resolve(null),
         ]);
 
-        // Contratistas
         setContractors(contrs ?? []);
-
-        // Perfiles: asegurar {id, nombre}
         const profOpts = (profs ?? []).map((p: any) => ({
           id: p.id,
           nombre: p.nombre,
         })) as ProfileOption[];
         setProfiles(profOpts);
 
-        // Si estamos editando: precargar campos
-        if (user) {
-          preloadFromUser(user);
-        }
+        if (user) preloadFromUser(user);
       } catch (err) {
         console.error(err);
         toast.error("No se pudieron cargar datos iniciales.");
@@ -128,13 +135,11 @@ const CreateContractor = () => {
       estado: u.activo ? "Activo" : "Inactivo",
     });
 
-    // Perfil: usar idPerfilDefault si viene; si no, primer perfilIds
     const profileId =
       (u.idPerfilDefault as number | null | undefined) ??
       (Array.isArray(u.perfilIds) && u.perfilIds.length > 0 ? u.perfilIds[0] : null);
     setSelectedProfileId(profileId ?? null);
 
-    // Contratista: si viene array, toma el primero (UI actual es single select)
     const contrId =
       Array.isArray(u.contratistaIds) && u.contratistaIds.length > 0 ? u.contratistaIds[0] : null;
     setSelectedContractorId(contrId ?? null);
@@ -165,14 +170,13 @@ const CreateContractor = () => {
 
   const buildCreatePayload = (): CreateUserRequest => ({
     login: form.usuario || undefined,
-    // Si tu backend exige password, agrega un campo en el form y pásalo aquí
     password: undefined,
     nombre: form.nombre || undefined,
     apellidoPaterno: form.apellidoPaterno || undefined,
     apellidoMaterno: form.apellidoMaterno || undefined,
     email: form.email || undefined,
     numeroDocumento: form.documento || undefined,
-    idTipoDocumento: form.documento?.length === 8 ? 1 : undefined, // ajusta si difiere tu catálogo
+    idTipoDocumento: form.documento?.length === 8 ? 1 : undefined,
     celular: form.celular || undefined,
     direccion: form.direccion || undefined,
     activo: form.estado === "Activo",
@@ -261,6 +265,25 @@ const CreateContractor = () => {
         <h2 className="text-sm font-semibold text-primary mb-4">Datos Generales</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Usuario */}
+          <div className="grid gap-2 md:col-span-2 place-items-center">
+            <Label htmlFor="usuario" className="text-center font-semibold">
+              Usuario *
+            </Label>
+            <Input
+              id="usuario"
+              name="usuario"
+              value={form.usuario}
+              onChange={handleChange}
+              placeholder="Ej: EM72447387"
+              className={`w-full max-w-md text-center ${
+                isEdit || !form.usuario ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
+              disabled={isEdit ? true : !form.usuario}
+            />
+            {errors.usuario && <span className="text-xs text-red-500">{errors.usuario}</span>}
+          </div>
+
           {/* Nombre */}
           <div className="grid gap-2">
             <Label htmlFor="nombre">Ingrese el nombre *</Label>
@@ -299,20 +322,6 @@ const CreateContractor = () => {
               placeholder="Ej: Gómez"
               disabled={saving || loading}
             />
-          </div>
-
-          {/* Usuario */}
-          <div className="grid gap-2">
-            <Label htmlFor="usuario">Ingrese el usuario *</Label>
-            <Input
-              id="usuario"
-              name="usuario"
-              value={form.usuario}
-              onChange={handleChange}
-              placeholder="Ej: jgomez"
-              disabled={saving || loading}
-            />
-            {errors.usuario && <span className="text-xs text-red-500">{errors.usuario}</span>}
           </div>
 
           {/* Documento */}
@@ -391,7 +400,7 @@ const CreateContractor = () => {
             </Select>
           </div>
 
-          {/* Perfil (desde backend) */}
+          {/* Perfil */}
           <div className="grid gap-2">
             <Label htmlFor="perfil">Seleccione el perfil</Label>
             <Select
@@ -412,7 +421,7 @@ const CreateContractor = () => {
             </Select>
           </div>
 
-          {/* Contratista (desde backend) */}
+          {/* Contratista */}
           <div className="grid gap-2">
             <Label htmlFor="contratista">Seleccione el contratista</Label>
             <Select

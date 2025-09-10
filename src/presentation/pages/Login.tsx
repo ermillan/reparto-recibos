@@ -295,8 +295,14 @@ const Login: React.FC = () => {
       loading: "Iniciando sesión...",
       success: (res: any) => {
         loginUser(res);
-        navigate("/dashboard");
-        return `¡Bienvenido ${res?.usuario?.nombre ?? ""}!`;
+
+        if (res.code === "PASSWORD_CHANGE_REQUIRED") {
+          navigate("/cambiar-contrasena");
+          return `¡Bienvenido por favor cambie su contrasena!`;
+        } else {
+          navigate("/dashboard");
+          return `¡Bienvenido ${res?.usuario?.nombre ?? ""}!`;
+        }
       },
       error: "Credenciales inválidas o error en el servidor",
       position: "top-right",

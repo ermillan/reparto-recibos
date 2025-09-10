@@ -9,6 +9,7 @@ import ConsultContractor from "@/presentation/pages/ConsultContractor";
 import CreateContractor from "@/presentation/pages/CreateContractor";
 import ConsultProfiles from "@/presentation/pages/ConsultProfile";
 import ReceiptUpload from "@/presentation/pages/ReceiptUpload";
+import ChangePassword from "@/presentation/pages/ChangePassword";
 
 export default function AppRouter() {
   return (
@@ -22,6 +23,8 @@ export default function AppRouter() {
           </GuestGuard>
         }
       />
+
+      <Route path="/cambiar-contrasena" element={<ChangePassword />} />
 
       {/* Privadas */}
       <Route element={<DashboardLayout />}>

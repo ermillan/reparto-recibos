@@ -1,29 +1,26 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type User = {
-  id: number;
-  login: string;
-  nombre: string;
-  cargo?: string;
-};
-
-type AuthState = {
+const initialState: {
   token: string | null;
-  user: User | null;
-};
-
-const initialState: AuthState = {
+  user: any | null;
+  mustChangePassword?: boolean;
+} = {
   token: null,
   user: null,
+  mustChangePassword: false,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<{ token: string; user: User }>) => {
+    login: (
+      state,
+      action: PayloadAction<{ token: string; user: any; mustChangePassword?: boolean }>
+    ) => {
       state.token = action.payload.token;
       state.user = action.payload.user;
+      state.mustChangePassword = Boolean(action.payload.mustChangePassword);
     },
     logout: (state) => {
       state.token = null;
