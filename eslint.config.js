@@ -64,6 +64,9 @@ export default [
       "jsx-a11y/anchor-is-valid": "warn",
       "jsx-a11y/no-autofocus": "warn",
 
+      // ---- Console ---
+      "eslint-disable no-console": "off",
+
       // --- Prettier ---
       "prettier/prettier": [
         "error",
