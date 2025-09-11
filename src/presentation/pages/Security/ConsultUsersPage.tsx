@@ -127,14 +127,24 @@ const ConsultUsersPage = () => {
       const resp = await getUserPaginated.exec(query);
       setRows((resp.items ?? []) as UserRow[]);
       setTotal(resp.meta?.total ?? 0);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      setError(
-        e?.response?.data?.title ||
-          e?.response?.data?.message ||
-          e?.message ||
-          "No se pudo cargar la lista de usuarios."
-      );
+
+      if (typeof e === "object" && e !== null) {
+        const err = e as {
+          response?: { data?: { title?: string; message?: string } };
+          message?: string;
+        };
+
+        setError(
+          err.response?.data?.title ||
+            err.response?.data?.message ||
+            err.message ||
+            "No se pudo cargar la lista de usuarios."
+        );
+      } else {
+        setError("No se pudo cargar la lista de usuarios.");
+      }
     } finally {
       setLoading(false);
     }
@@ -368,9 +378,7 @@ const ConsultUsersPage = () => {
               rows.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell className="max-w-[160px] truncate">
-                    <a href="#" className="text-primary hover:underline">
-                      {u.login}
-                    </a>
+                    <p className="text-primary hover:underline">{u.login}</p>
                   </TableCell>
                   <TableCell className="max-w-[220px] truncate">{u.nombreCompleto}</TableCell>
                   <TableCell>{u.email}</TableCell>
