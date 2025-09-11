@@ -395,7 +395,7 @@ const ConsultUsersPage = () => {
                         className="transition-colors ease-in-out duration-300 hover:bg-green-50 hover:text-green-700"
                         asChild
                       >
-                        <NavLink to={`/seguridad/contratista/actualizar-contratista/${u.id}`}>
+                        <NavLink to={`/seguridad/usuarios/actualizar-usuario/${u.id}`}>
                           <PenIcon className="h-4 w-4" />
                         </NavLink>
                       </Button>
