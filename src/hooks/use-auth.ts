@@ -8,12 +8,10 @@ export function useAuth() {
   const { token, user, mustChangePassword } = useSelector((state: RootState) => state.auth);
 
   const isAuthenticated = Boolean(token);
-
-  // Mantengo el nombre original: requiredChanguePass
   const requiredChanguePass = Boolean(mustChangePassword);
 
   const loginUser = (data: LoginResponse) => {
-    const derivedMustChange = (data as any)?.code === "PASSWORD_CHANGE_REQUIRED";
+    const derivedMustChange = data.code === "PASSWORD_CHANGE_REQUIRED";
 
     dispatch(
       login({
@@ -24,7 +22,7 @@ export function useAuth() {
     );
 
     if (derivedMustChange) {
-      // 🔑 Guardamos el access_token como resetToken
+      // 🔑 usamos el access_token como resetToken
       sessionStorage.setItem("mustChangePassword", "true");
       sessionStorage.setItem("resetToken", data.access_token);
     } else {
@@ -35,6 +33,8 @@ export function useAuth() {
 
   const logoutUser = () => {
     dispatch(logout());
+    sessionStorage.removeItem("mustChangePassword");
+    sessionStorage.removeItem("resetToken");
   };
 
   return {

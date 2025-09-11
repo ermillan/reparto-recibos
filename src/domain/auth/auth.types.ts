@@ -2,7 +2,18 @@ export interface LoginRequest {
   login?: string | null;
   passwordPlano?: string | null;
 }
-export type LoginResponse = unknown; // cambia a { token: string; user: ... } si aplica
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  usuario: User;
+  code?: string;
+}
 
 export interface ChangePasswordFirstTimeRequest {
   resetToken?: string | null;

@@ -5,6 +5,8 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  login?: string;
+  nombre?: string;
   // agrega más campos reales si los tienes
 }
 
