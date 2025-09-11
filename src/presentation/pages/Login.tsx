@@ -175,7 +175,6 @@ const LoginFooter: React.FC<LoginFooterProps> = ({
           variant="link"
           type="button"
           onClick={() => {
-            // Limpia token viejo si existiera
             sessionStorage.removeItem("resetToken");
             setIsForgotPassword(true);
           }}
@@ -204,7 +203,7 @@ const LoginFooter: React.FC<LoginFooterProps> = ({
 // Página principal
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { loginUser } = useAuth();
+  const { loginUser, logoutUser } = useAuth(); // 👈 añadimos logoutUser
 
   const [visiblePass, setVisiblePass] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -218,6 +217,13 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [secondsRemaining, setSecondsRemaining] = useState(OTP_WINDOW_MINUTES * 60);
+
+  // 🔑 Logout forzado al montar
+  useEffect(() => {
+    logoutUser();
+    sessionStorage.clear();
+    localStorage.clear();
+  }, [logoutUser]);
 
   // Reset de estados al entrar/salir del modo "Olvidé mi contraseña"
   useEffect(() => {
@@ -264,11 +270,6 @@ const Login: React.FC = () => {
     if (isForgotPassword) {
       // Flujo: Recuperación
       if (!isOtpSent) {
-        // Enviar OTP
-        if (!email.trim()) {
-          toast.error("Ingresa tu usuario/correo.");
-          return;
-        }
         const promise = forgotPasswordUseCase.exec({ login: email.trim() });
         await toast.promise(promise, {
           loading: "Enviando código...",
@@ -280,48 +281,34 @@ const Login: React.FC = () => {
           error: "No se pudo enviar el código.",
         });
       } else {
-        // Validar OTP
-        // Validar OTP
         if (!otp.trim() || otp.trim().length !== OTP_LENGTH) {
           toast.error(`Ingresa el código OTP de ${OTP_LENGTH} dígitos.`);
           return;
         }
 
-        // Limpia tokens viejos por seguridad
-        sessionStorage.removeItem("resetToken");
-
-        // 1) arma la promesa real del API
         const verifyPromise = verifyRecoveryUseCase.exec({
           login: email.trim(),
           code: otp.trim(),
         });
 
-        // 2) muestra los toasts en paralelo sobre ESA promesa
         toast.promise(verifyPromise, {
           loading: "Validando código...",
           success: "Código validado correctamente.",
           error: "Código inválido o expirado.",
         });
 
-        // 3) espera el resultado REAL del API (no el id del toast)
         const res = await verifyPromise;
-
-        // Si tu use case ya devuelve el body, esto alcanza:
         const resetToken = (res as any)?.reset_token ?? (res as any)?.data?.reset_token;
 
-        if (
-          typeof resetToken === "string" &&
-          resetToken.trim() &&
-          resetToken !== "undefined" &&
-          resetToken !== "null"
-        ) {
+        if (typeof resetToken === "string" && resetToken.trim()) {
           sessionStorage.setItem("resetToken", resetToken);
+          sessionStorage.setItem("mustChangePassword", "true");
           navigate("/cambiar-contrasena", { state: { resetToken, from: "recovery" } });
         } else {
-          console.error("verifyRecovery respuesta inesperada:", res);
           toast.error("Token de recuperación inválido.");
         }
       }
+
       return;
     }
 
@@ -337,14 +324,16 @@ const Login: React.FC = () => {
         loginUser(res);
 
         if (res?.code === "PASSWORD_CHANGE_REQUIRED") {
-          return "Acceso restringido: recupere su contraseña con OTP.";
+          navigate("/cambiar-contrasena", {
+            state: { resetToken: res.access_token, from: "login" },
+          });
+          return "Acceso restringido: recupere su contraseña.";
         } else {
           navigate("/dashboard");
           return `¡Bienvenido ${res?.usuario?.nombre ?? ""}!`;
         }
       },
       error: "Credenciales inválidas o error en el servidor",
-      position: "top-right",
     });
   };
 

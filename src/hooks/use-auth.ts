@@ -13,17 +13,24 @@ export function useAuth() {
   const requiredChanguePass = Boolean(mustChangePassword);
 
   const loginUser = (data: LoginResponse) => {
-    // Deriva el flag si no lo manejas aún en tu backend/slice
-    const derivedMustChange = (data as any)?.code === "PASSWORD_CHANGE_REQUIRED" ? true : false;
+    const derivedMustChange = (data as any)?.code === "PASSWORD_CHANGE_REQUIRED";
 
     dispatch(
       login({
         token: data.access_token,
         user: data.usuario,
-        // Si tu slice admite este campo, lo pasas:
         mustChangePassword: derivedMustChange,
       })
     );
+
+    if (derivedMustChange) {
+      // 🔑 Guardamos el access_token como resetToken
+      sessionStorage.setItem("mustChangePassword", "true");
+      sessionStorage.setItem("resetToken", data.access_token);
+    } else {
+      sessionStorage.removeItem("mustChangePassword");
+      sessionStorage.removeItem("resetToken");
+    }
   };
 
   const logoutUser = () => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
 import {
   Card,
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 // Caso de uso/capa de infraestructura
 import { ChangePasswordFirstTime } from "@/application/auth";
@@ -24,7 +25,7 @@ const changePasswordFirstTime = new ChangePasswordFirstTime(authRepo);
 type PasswordState = { newPassword: string; confirmPassword: string };
 const MIN_LEN = 8;
 
-// Normaliza la obtención del reset token
+// 👉 Obtiene el resetToken desde state o sessionStorage
 const pickResetToken = (loc: ReturnType<typeof useLocation>): string => {
   const fromState = (loc.state as any)?.resetToken as string | undefined;
   const fromSession = sessionStorage.getItem("resetToken") ?? "";
@@ -36,8 +37,9 @@ const pickResetToken = (loc: ReturnType<typeof useLocation>): string => {
 export default function ChangePassword() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logoutUser } = useAuth(); // 👈 usamos logoutUser para limpiar Redux también
 
-  const [resetToken, setResetToken] = useState<string>(() => pickResetToken(location));
+  const [resetToken, setResetToken] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState<{ newPass: boolean; confirm: boolean }>({
     newPass: false,
@@ -45,16 +47,28 @@ export default function ChangePassword() {
   });
   const [form, setForm] = useState<PasswordState>({ newPassword: "", confirmPassword: "" });
 
+  const shownError = useRef(false);
+
   useEffect(() => {
     const token = pickResetToken(location);
-    if (!token) {
-      toast.error("Token de recuperación no encontrado o expirado.");
-      navigate("/login", { replace: true });
+
+    if (token) {
+      setResetToken(token);
+      sessionStorage.setItem("resetToken", token);
       return;
     }
-    setResetToken(token);
-    sessionStorage.setItem("resetToken", token); // respaldo por si recargan
-  }, [location, navigate]);
+
+    // 🚨 Si no hay token válido → limpiar todo y redirigir al login
+    if (!shownError.current) {
+      shownError.current = true;
+      toast.dismiss();
+      toast.error("Token de recuperación no encontrado o expirado.");
+      logoutUser();
+      sessionStorage.clear();
+      localStorage.clear();
+      navigate("/login", { replace: true });
+    }
+  }, [location, navigate, logoutUser]);
 
   const rules = useMemo(() => {
     const hasMinLen = form.newPassword.length >= MIN_LEN;
@@ -87,36 +101,31 @@ export default function ChangePassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || !resetToken) return;
-    if (loading) return; // evita doble click
+    if (!isValid) return;
+    if (loading) return;
 
     try {
       setLoading(true);
 
-      // 1) promesa real del API
       const p = changePasswordFirstTime.exec({
         resetToken,
         newPassword: form.newPassword,
       });
 
-      // 2) un solo toast (éxito/loader/error)
-      toast.promise(p, {
+      await toast.promise(p, {
         loading: "Actualizando...",
-        success: "Contraseña actualizada correctamente. Inicia sesión con tu nueva clave.",
-        error: "No se pudo actualizar.",
+        success: "Contraseña actualizada correctamente.",
+        error: "No se pudo actualizar la contraseña.",
       });
-
-      // 3) espera el resultado real
-      await p;
-
-      // 4) post-acción sin otro toast.success
-      sessionStorage.removeItem("resetToken");
-      navigate("/login", { replace: true });
     } catch (err) {
-      // El toast de error ya lo mostró toast.promise
       console.error("changePassword error:", err);
     } finally {
+      // 🔑 logout forzado + limpieza completa
+      logoutUser();
+      sessionStorage.clear();
+      localStorage.clear();
       setLoading(false);
+      navigate("/login", { replace: true });
     }
   };
 
@@ -222,11 +231,7 @@ export default function ChangePassword() {
               </div>
 
               <CardFooter className="px-0">
-                <Button
-                  type="submit"
-                  className="w-full font-medium"
-                  disabled={!isValid || loading || !resetToken}
-                >
+                <Button type="submit" className="w-full font-medium" disabled={!isValid || loading}>
                   {loading ? "Actualizando..." : "Actualizar contraseña"}
                 </Button>
               </CardFooter>
