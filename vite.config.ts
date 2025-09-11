@@ -7,15 +7,11 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   console.log(`🚀 Running Vite in ${mode} mode`);
 
   return {
-    plugins: [
-      react(),
-      tailwindcss(), // Plugin oficial para Tailwind
-    ],
+    plugins: [react(), tailwindcss()],
     base: mode === "production" ? "/FrontRepartoRecibos/" : "/FrontRepartoRecibos/",
     resolve: {
       alias: {
@@ -23,22 +19,31 @@ export default defineConfig(({ mode }) => {
         "@components": path.resolve(__dirname, "./src/components"),
         "@assets": path.resolve(__dirname, "./src/assets"),
         "@utils": path.resolve(__dirname, "./src/utils"),
+        "@lib": path.resolve(__dirname, "./src/lib"),
+        "@hooks": path.resolve(__dirname, "./src/hooks"),
+        "@ui": "@/components/ui",
       },
     },
     build: {
       outDir: "dist",
-      sourcemap: mode !== "production", // mapas de fuente solo en dev/staging
+      sourcemap: mode !== "production",
+      chunkSizeWarningLimit: 1500,
       rollupOptions: {
         output: {
-          manualChunks: {
-            react: ["react", "react-dom"],
+          manualChunks(id) {
+            if (id.includes("node_modules")) {
+              if (id.includes("@radix-ui")) return "ui";
+              if (id.includes("lucide-react")) return "ui";
+              if (id.includes("react-router-dom")) return "router";
+              if (id.includes("react")) return "react";
+            }
           },
         },
       },
     },
     server: {
       open: true,
-      port: 5173, // puerto estándar de Vite, se puede personalizar
+      port: 5173,
       strictPort: true,
     },
     define: {
@@ -46,7 +51,7 @@ export default defineConfig(({ mode }) => {
     },
     css: {
       modules: {
-        localsConvention: "camelCase", // para importar estilos en formato camelCase
+        localsConvention: "camelCase",
       },
       preprocessorOptions: {
         scss: {
