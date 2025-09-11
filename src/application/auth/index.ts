@@ -45,10 +45,12 @@ export class VerifyRecovery {
   constructor(repo: IAuthRepository) {
     this.repo = repo;
   }
-  exec(payload: VerifyRecoveryRequest): Promise<VerifyRecoveryResponse> {
-    return this.repo.verifyRecovery(payload);
+
+  exec(p: VerifyRecoveryRequest): Promise<VerifyRecoveryResponse> {
+    return this.repo.verifyRecovery(p);
   }
 }
+
 export class ChangePassword {
   private repo: IAuthRepository;
   constructor(repo: IAuthRepository) {

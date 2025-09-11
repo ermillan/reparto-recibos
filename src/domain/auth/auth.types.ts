@@ -19,7 +19,6 @@ export interface VerifyRecoveryRequest {
   login?: string | null;
   code?: string | null;
 }
-export type VerifyRecoveryResponse = void;
 
 export interface ChangePasswordRequest {
   resetToken?: string | null;
@@ -38,3 +37,8 @@ export interface MenuOption {
 export interface AuthOptionsResponse {
   menu?: MenuOption[] | null;
 }
+
+export type VerifyRecoveryResponse = {
+  reset_token: string;
+  usuario: { id: number; login: string; nombre: string };
+};

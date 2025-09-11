@@ -1,7 +1,7 @@
 export const ENDPOINTS = {
   // AUTH
   login: "/api/Auth/login",
-  changePasswordFirstTime: "/api/Auth/cambiar-clave-primera-vez",
+  changePasswordFirstTime: "/api/Auth/cambiar-clave",
   forgotPassword: "/api/Auth/olvide-clave",
   verifyRecovery: "/api/Auth/verifica-recuperacion-clave",
   changePassword: "/api/Auth/cambiar-clave",
