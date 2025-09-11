@@ -1,4 +1,3 @@
-// eslint.config.js
 import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -6,10 +5,15 @@ import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactRefresh from "eslint-plugin-react-refresh";
+import prettier from "eslint-plugin-prettier";
 
 export default [
   {
-    ignores: ["coverage/**"], // 👈 ignora coverage
+    ignores: [
+      "dist/**", // Archivos generados por Vite
+      "coverage/**", // Reportes de cobertura
+      "node_modules/**",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -22,19 +26,56 @@ export default [
         sourceType: "module",
         ecmaFeatures: { jsx: true },
       },
-      globals: globals.browser,
+      globals: {
+        ...globals.browser,
+        React: "writable",
+      },
     },
     plugins: {
       react,
       "react-hooks": reactHooks,
       "jsx-a11y": jsxA11y,
-      "react-refresh": reactRefresh,
+      prettier,
     },
     rules: {
+      // --- Base JS ---
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-unused-vars": "off", // lo maneja TS
+      "no-undef": "off",
+
+      // --- TypeScript ---
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/consistent-type-imports": ["warn", { prefer: "type-imports" }],
+
+      // --- React ---
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "react-refresh/only-export-components": "off",
+      "react/jsx-uses-react": "off",
+      "react/jsx-uses-vars": "error",
+      "react/self-closing-comp": "warn",
+
+      // --- React Hooks ---
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+
+      // --- Accesibilidad ---
+      "jsx-a11y/alt-text": "warn",
+      "jsx-a11y/anchor-is-valid": "warn",
+      "jsx-a11y/no-autofocus": "warn",
+
+      // --- Prettier ---
+      "prettier/prettier": [
+        "error",
+        {
+          semi: true,
+          singleQuote: false,
+          trailingComma: "es5",
+          printWidth: 100,
+          endOfLine: "lf",
+        },
+      ],
     },
     settings: {
       react: { version: "detect" },
