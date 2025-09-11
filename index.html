@@ -1,13 +1,44 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5"
+    />
+    <meta name="description" content="Reparto Recibos - Panel web moderno para gestionar y visualizar recibos de manera rápida y sencilla." />
+    <meta name="keywords" content="Reparto, Recibos, Gestión, Facturación, Pagos" />
+    <meta name="author" content="Ayesa" />
+    <!-- <meta name="theme-color" content="#0f172a" /> -->
+
+    <!-- Open Graph / Social Meta Tags -->
+    <!-- <meta property="og:title" content="Reparto Recibos" />
+    <meta property="og:description" content="Gestiona y organiza tus recibos de forma eficiente con Reparto Recibos." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/icon.png" />
+    <meta property="og:url" content="https://tusitio.com/FrontRepartoRecibos/" /> -->
+
+    <!-- Twitter Card -->
+    <!-- <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Reparto Recibos" />
+    <meta name="twitter:description" content="Plataforma moderna para gestionar recibos de manera sencilla." />
+    <meta name="twitter:image" content="/icon.png" /> -->
+
+    <!-- Favicon & Manifest -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
     <title>Reparto Recibos</title>
-    <link rel="icon" type="image/png" href="/icon.png" />
   </head>
-  <body>
+  <body class="bg-gray-50 text-gray-900 antialiased">
+    <noscript>
+      Necesitas habilitar JavaScript para ejecutar esta aplicación.
+    </noscript>
+
     <div id="root"></div>
+
+    <!-- Script principal de Vite -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
