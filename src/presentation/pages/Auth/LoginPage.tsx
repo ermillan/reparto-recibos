@@ -126,7 +126,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   return (
     <>
       <div className="grid w-full items-center gap-2">
-        <Label htmlFor="email">Ingrese su correo o usuario:</Label>
+        <Label htmlFor="email">Ingrese su usuario:</Label>
         <Input type="text" id="email" name="email" value={email} onChange={handleEmailChange} />
       </div>
 

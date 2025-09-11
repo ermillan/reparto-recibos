@@ -55,6 +55,8 @@ type UserRow = {
   activo: boolean;
   bloqueado: boolean;
   primeraVez: boolean;
+  perfiles: string;
+  contratista: string;
 };
 
 const ConsultUsersPage = () => {
@@ -189,7 +191,7 @@ const ConsultUsersPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl font-semibold text-primary">Consulta de Usuarios</h1>
         <Button asChild variant="ghost" className="w-full sm:w-auto justify-center gap-2">
-          <NavLink to="/seguridad/contratista/crear-contratista">
+          <NavLink to="/seguridad/usuarios/crear-usuario">
             <Plus className="h-4 w-4" />
             <span>Agregar</span>
           </NavLink>
@@ -356,8 +358,8 @@ const ConsultUsersPage = () => {
               <TableHead className="text-white">Código</TableHead>
               <TableHead className="text-white">Documento</TableHead>
               <TableHead className="text-white">Estado</TableHead>
-              <TableHead className="text-white">Bloqueado</TableHead>
-              <TableHead className="text-white">Primera Vez</TableHead>
+              <TableHead className="text-white">Contratista</TableHead>
+              <TableHead className="text-white">Perfil</TableHead>
               <TableHead className="text-white">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -385,8 +387,8 @@ const ConsultUsersPage = () => {
                   <TableCell>{u.codigo}</TableCell>
                   <TableCell>{u.numeroDocumento}</TableCell>
                   <TableCell>{u.activo ? "Activo" : "Inactivo"}</TableCell>
-                  <TableCell>{u.bloqueado ? "Bloqueado" : "No"}</TableCell>
-                  <TableCell>{u.primeraVez ? "Sí" : "No"}</TableCell>
+                  <TableCell>{u.contratista}</TableCell>
+                  <TableCell>{u.perfiles}</TableCell>
                   <TableCell>
                     <div className="flex flex-row gap-2">
                       <Button
