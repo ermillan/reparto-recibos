@@ -56,7 +56,7 @@ type UserRow = {
   bloqueado: boolean;
   primeraVez: boolean;
   perfiles: string;
-  contratista: string;
+  contratistas: string;
 };
 
 const ConsultUsersPage = () => {
@@ -387,7 +387,7 @@ const ConsultUsersPage = () => {
                   <TableCell>{u.codigo}</TableCell>
                   <TableCell>{u.numeroDocumento}</TableCell>
                   <TableCell>{u.activo ? "Activo" : "Inactivo"}</TableCell>
-                  <TableCell>{u.contratista}</TableCell>
+                  <TableCell>{u.contratistas}</TableCell>
                   <TableCell>{u.perfiles}</TableCell>
                   <TableCell>
                     <div className="flex flex-row gap-2">
