@@ -10,6 +10,7 @@ import {
   ConsultUsersPage,
 } from "../pages/Security";
 import { ReceiptUploadPage } from "../pages/receipts";
+import { UpdateParamsPage } from "../pages/Admin";
 
 export const PrivateRoutes = (
   <Route element={<DashboardLayout />}>
@@ -23,6 +24,9 @@ export const PrivateRoutes = (
     <Route path={ROUTES.PRIVATE.SECURITY.USERS} element={<ConsultUsersPage />} />
     <Route path={ROUTES.PRIVATE.SECURITY.CREATE_USER} element={<CreateUserPage />} />
     <Route path={ROUTES.PRIVATE.SECURITY.UPDATE_USER} element={<CreateUserPage />} />
+
+    {/* Administracion */}
+    <Route path={ROUTES.PRIVATE.ADMINISTRATION.UPDATE_PARAMS} element={<UpdateParamsPage />} />
 
     {/* Recibos */}
     <Route path={ROUTES.PRIVATE.RECEIPTS.UPLOAD} element={<ReceiptUploadPage />} />
