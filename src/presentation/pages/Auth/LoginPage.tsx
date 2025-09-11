@@ -201,7 +201,7 @@ const LoginFooter: React.FC<LoginFooterProps> = ({
 );
 
 // Página principal
-const Login: React.FC = () => {
+const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { loginUser, logoutUser } = useAuth(); // 👈 añadimos logoutUser
 
@@ -375,4 +375,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default LoginPage;

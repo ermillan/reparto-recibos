@@ -17,7 +17,7 @@ function formatBytes(bytes: number) {
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
 
-export default function ReceiptUpload() {
+export default function ReceiptUploadPage() {
   const [tab, setTab] = useState<TabKey>("new");
 
   // ====== NEW FILES (upload) state ======

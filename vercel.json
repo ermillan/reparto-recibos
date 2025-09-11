@@ -1,3 +1,0 @@
-{
-  "rewrites": [{ "source": "/FrontRepartoRecibos/(.*)", "destination": "/index.html" }]
-}

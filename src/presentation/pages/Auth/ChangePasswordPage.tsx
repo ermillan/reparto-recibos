@@ -34,7 +34,7 @@ const pickResetToken = (loc: ReturnType<typeof useLocation>): string => {
   return candidate;
 };
 
-export default function ChangePassword() {
+export default function ChangePasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { logoutUser } = useAuth(); // 👈 usamos logoutUser para limpiar Redux también

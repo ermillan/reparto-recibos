@@ -29,16 +29,35 @@ import {
 import { Button } from "./ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "@radix-ui/react-separator";
-// import { LogoutUseCase } from "@/application/auth/logout.usecase";
-// import { AuthApi } from "@/infrastructure/auth/auth.api";
 import { useAuth } from "@/hooks/use-auth";
+import { GetAuthOptions } from "@/application/auth";
+import { useEffect, useState, type JSX } from "react";
+import { AuthApi } from "@/infrastructure/services/recibos.api";
+import { normalizePath } from "@/lib/utils/path-utils";
 
-// const authRepo = new AuthApi();
-// const logoutUseCase = new LogoutUseCase(authRepo);
+const authRepo = new AuthApi();
+const getAuthOptions = new GetAuthOptions(authRepo);
+
+const iconMap: Record<string, JSX.Element> = {
+  Seguridad: <Shield className="h-4 w-4" />,
+  Usuarios: <Users className="h-4 w-4" />,
+  "Parámetros del sistema": <UserSquare2 className="h-4 w-4" />,
+  "Gestión de Recibos": <FileText className="h-4 w-4" />,
+  Perfiles: <Users className="h-4 w-4" />,
+  "Carga de Recibos": <Upload className="h-4 w-4" />,
+};
 
 export function AppSidebar() {
   const navigate = useNavigate();
   const { user, logoutUser } = useAuth();
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      const response = await getAuthOptions.exec();
+      setData(response);
+    })();
+  }, []);
 
   const handleLogout = () => {
     logoutUser();
@@ -49,12 +68,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="sidebar-gradient text-white">
       <SidebarHeader className="py-5">
         <div className="flex items-center gap-3">
-          {/* Icono siempre visible */}
           <div className="shrink-0 h-8 w-8 rounded-lg bg-white/20 grid place-items-center">
             <Building2 className="h-4 w-4 text-white" />
           </div>
-
-          {/* Bloque de textos: se oculta solo cuando el sidebar está colapsado */}
           <div className="min-w-0 group-data-[state=collapsed]/sidebar:hidden">
             <div className="font-semibold leading-tight text-wrap">
               Sistema de entrega de recibos
@@ -62,82 +78,54 @@ export function AppSidebar() {
             <div className="text-xs opacity-85 truncate">{user?.login}</div>
             <div className="text-xs opacity-85 truncate">{user?.nombre}</div>
           </div>
-
-          <button
-            className="ml-auto text-white/80 hover:text-white transition
-                     group-data-[state=collapsed]/sidebar:hidden"
-            aria-label="Más opciones"
-          ></button>
         </div>
       </SidebarHeader>
 
       <Separator orientation="horizontal" className="mx-2 h-[1px] bg-white" />
 
       <SidebarContent>
-        {/* Plataforma / navegación */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-white/90">Plataforma</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenu>
-                <Collapsible defaultOpen className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="...">
-                        <Shield className="h-4 w-4" />
-                        <span>Seguridad</span>
-                        <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink to="/seguridad/perfiles">
-                              <Users className="h-4 w-4" />
-                              <span>Perfiles</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink to="/seguridad/contratista">
-                              <UserSquare2 className="h-3.5 w-3.5" />
-                              <span>Contratistas y otros</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
+              {data?.menu?.map((item: any) =>
+                item.sub && item.sub.length > 0 ? (
+                  <Collapsible key={item.id} defaultOpen className="group/collapsible">
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton>
+                          {iconMap[item.name] || <Shield className="h-4 w-4" />}
+                          <span>{item.name}</span>
+                          <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.sub.map((subItem: any) => (
+                            <SidebarMenuSubItem key={subItem.id}>
+                              <SidebarMenuSubButton asChild>
+                                <NavLink to={normalizePath(item.to, subItem.to)}>
+                                  {iconMap[subItem.name] || <Users className="h-4 w-4" />}
+                                  <span>{subItem.name}</span>
+                                </NavLink>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={normalizePath(item.to)}>
+                        {iconMap[item.name] || <FileText className="h-4 w-4" />}
+                        <span>{item.name}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
-                </Collapsible>
-              </SidebarMenu>
-
-              <SidebarMenu>
-                <Collapsible defaultOpen className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="...">
-                        <FileText className="h-4 w-4" />
-                        <span>Gestión de Recibos</span>
-                        <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink to="/gestion-recibos/carga-recibos">
-                              <Upload className="h-4 w-4" />
-                              <span>Carga de Recibos</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              </SidebarMenu>
+                )
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -149,15 +137,8 @@ export function AppSidebar() {
             <SidebarMenuButton asChild className="hover:bg-transparent focus-visible:ring-0">
               <Button
                 variant="destructive"
-                aria-label="Cerrar sesión"
                 onClick={handleLogout}
-                className="transition-colors ease-in-out duration-300 bg-white text-gray-700 hover:bg-red-400 hover:text-white
-                w-full flex items-center justify-center
-                group-data-[state=collapsed]/sidebar:w-8
-                group-data-[state=collapsed]/sidebar:h-8
-                group-data-[state=collapsed]/sidebar:px-0
-                group-data-[state=collapsed]/sidebar:gap-2
-              "
+                className="transition-colors ease-in-out duration-300 bg-white text-gray-700 hover:bg-red-400 hover:text-white w-full flex items-center justify-center"
               >
                 <LogOut className="h-4 w-4" />
                 <span className="group-data-[state=collapsed]/sidebar:hidden">Cerrar sesión</span>

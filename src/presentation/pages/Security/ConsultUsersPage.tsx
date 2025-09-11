@@ -57,7 +57,7 @@ type UserRow = {
   primeraVez: boolean;
 };
 
-const ConsultContractor = () => {
+const ConsultUsersPage = () => {
   // ===== Filtros =====
   const [nameFilter, setNameFilter] = useState(""); // -> Nombre
   const [userFilter, setUserFilter] = useState(""); // -> Login
@@ -426,4 +426,4 @@ const ConsultContractor = () => {
   );
 };
 
-export default ConsultContractor;
+export default ConsultUsersPage;

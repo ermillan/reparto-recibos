@@ -50,7 +50,7 @@ const regex = {
   celular: /^[0-9]{9}$/,
 };
 
-const CreateContractor = () => {
+const CreateUserPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -459,4 +459,4 @@ const CreateContractor = () => {
   );
 };
 
-export default CreateContractor;
+export default CreateUserPage;

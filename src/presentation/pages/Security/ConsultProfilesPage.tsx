@@ -78,7 +78,7 @@ const SkeletonTable = () => (
   </div>
 );
 
-const ConsultProfile = () => {
+const ConsultProfilesPage = () => {
   const location = useLocation();
 
   // Datos
@@ -318,4 +318,4 @@ const ConsultProfile = () => {
   );
 };
 
-export default ConsultProfile;
+export default ConsultProfilesPage;
