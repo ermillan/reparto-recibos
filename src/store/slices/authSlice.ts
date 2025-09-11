@@ -1,10 +1,20 @@
+// src/store/slices/authSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-const initialState: {
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  // agrega más campos reales si los tienes
+}
+
+export interface AuthState {
   token: string | null;
-  user: any | null;
-  mustChangePassword?: boolean;
-} = {
+  user: AuthUser | null;
+  mustChangePassword: boolean;
+}
+
+const initialState: AuthState = {
   token: null,
   user: null,
   mustChangePassword: false,
@@ -16,7 +26,7 @@ const authSlice = createSlice({
   reducers: {
     login: (
       state,
-      action: PayloadAction<{ token: string; user: any; mustChangePassword?: boolean }>
+      action: PayloadAction<{ token: string; user: AuthUser; mustChangePassword?: boolean }>
     ) => {
       state.token = action.payload.token;
       state.user = action.payload.user;
@@ -25,6 +35,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.token = null;
       state.user = null;
+      state.mustChangePassword = false;
     },
   },
 });

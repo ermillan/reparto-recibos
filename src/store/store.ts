@@ -4,18 +4,18 @@ import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 import { combineReducers } from "redux";
 
-import authReducer from "./slices/authSlice";
+import authReducer, { type AuthState } from "./slices/authSlice";
 import tablePrefsReducer from "./slices/tablePrefs.slice";
 
 const authPersistConfig = {
   key: "auth",
   storage,
-  // whitelist: ["token","user"] // si quieres granularidad
+  // whitelist: ["token", "user"] // si quieres granularidad
 };
 
 const rootReducer = combineReducers({
-  auth: persistReducer(authPersistConfig, authReducer),
-  tablePrefs: tablePrefsReducer, // no persistido
+  auth: persistReducer<AuthState>(authPersistConfig, authReducer),
+  tablePrefs: tablePrefsReducer,
 });
 
 export const store = configureStore({
@@ -24,5 +24,10 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
+
+// Tipos globales
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+// 🔑 Reexportamos AuthState para que TS no se queje con TS4023
+export type { AuthState };
