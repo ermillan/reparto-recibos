@@ -136,7 +136,8 @@ const UpdateParamsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="rounded-md border p-4 space-y-4">
+      {/* Card centrado */}
+      <div className="rounded-md border p-6 bg-card shadow-sm max-w-md mx-auto space-y-4">
         {loading ? (
           <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Cargando parámetros...
@@ -148,7 +149,7 @@ const UpdateParamsPage: React.FC = () => {
               <Input
                 id="gpsRadius"
                 name="gpsRadius"
-                type="text" // 👈 texto en lugar de number
+                type="text"
                 value={form.gpsRadius}
                 onChange={handleChange}
                 disabled={formDisabled}
@@ -162,21 +163,30 @@ const UpdateParamsPage: React.FC = () => {
               <Input
                 id="slaHours"
                 name="slaHours"
-                type="text" // 👈 texto en lugar de number
+                type="text"
                 value={form.slaHours}
                 onChange={handleChange}
                 disabled={formDisabled}
               />
             </div>
+
+            {/* Botón dentro del card */}
+            <div className="flex justify-end pt-4">
+              <Button
+                onClick={handleSave}
+                disabled={formDisabled}
+                className="flex items-center gap-2"
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Guardar
+              </Button>
+            </div>
           </>
         )}
-      </div>
-
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={formDisabled} className="flex items-center gap-2">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Guardar
-        </Button>
       </div>
     </div>
   );

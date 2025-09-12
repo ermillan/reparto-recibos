@@ -162,18 +162,27 @@ const ConsultProfilesPage = () => {
     (lastNonEmpty ?? []).length > 0 &&
     description.trim().length > 0;
 
-  // const canPrev = page > 1;
-  // const canNext = page < totalPages;
-
   const handleDeleteProfile = async (id: number) => {
-    const promise = deleteProfileUC.exec(id);
-    await toast.promise(promise, {
-      loading: "Eliminando perfil...",
-      success: "¡Perfil eliminado correctamente!",
-      error: "Error en el servidor.",
-    });
-    setPage((p) => ((displayed ?? []).length === 1 && p > 1 ? p - 1 : p));
-    fetchProfiles();
+    try {
+      await toast.promise(deleteProfileUC.exec(id), {
+        loading: "Eliminando perfil...",
+        success: "¡Perfil eliminado correctamente!",
+        error: (err) => {
+          if (err?.response?.data?.message) {
+            return err.response.data.message;
+          }
+          if (err instanceof Error) {
+            return err.message;
+          }
+          return "Error desconocido en el servidor.";
+        },
+      });
+
+      setPage((p) => ((displayed ?? []).length === 1 && p > 1 ? p - 1 : p));
+      fetchProfiles();
+    } catch (err) {
+      console.error("Error al eliminar perfil:", err);
+    }
   };
 
   return (
@@ -189,9 +198,10 @@ const ConsultProfilesPage = () => {
         </Button>
       </div>
 
-      {/* Buscador */}
-      <div className="grid grid-cols-1 gap-4">
-        <div className="grid w-full items-center gap-1.5">
+      {/* Filtros en la misma fila */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Buscador */}
+        <div className="flex flex-col gap-1.5 sm:col-span-2">
           <Label htmlFor="description" className="text-xs sm:text-sm text-muted-foreground">
             Nombre / Descripción / Código
           </Label>
@@ -207,11 +217,9 @@ const ConsultProfilesPage = () => {
             className="h-10"
           />
         </div>
-      </div>
 
-      {/* Estado */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="flex flex-col gap-1.5 min-w-0">
+        {/* Estado */}
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="estado" className="text-xs sm:text-sm text-muted-foreground">
             Estado
           </Label>

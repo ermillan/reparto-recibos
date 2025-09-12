@@ -1,4 +1,3 @@
-// src/pages/security/users/ConsultContractor.tsx
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, PenIcon, Trash2 } from "lucide-react";
+import { Plus, PenIcon, Trash2, ArrowDown, ArrowUp } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -34,7 +33,6 @@ import { ContractorApi, UserApi } from "@/infrastructure/services/recibos.api";
 // PaginationBar + Redux perPage
 import PaginationBar from "@/components/common/PaginationBar";
 import { useAppSelector } from "@/store/hooks";
-// ⬇️ ajusta este import si tu slice está en otra ruta
 import { selectPerPage } from "@/store/slices/tablePrefs.slice";
 
 const userApi = new UserApi();
@@ -59,42 +57,45 @@ type UserRow = {
   contratistas: string;
 };
 
-const ConsultUsersPage = () => {
-  // ===== Filtros =====
-  const [nameFilter, setNameFilter] = useState(""); // -> Nombre
-  const [userFilter, setUserFilter] = useState(""); // -> Login
-  const [documentFilter, setDocumentFilter] = useState(""); // -> NumeroDocumento
-  const [contractorFilter, setContractorFilter] = useState("Todos"); // -> IdContratista ("Todos" | "<id>")
-  const [statusFilter, setStatusFilter] = useState<"Activo" | "Inactivo">("Activo"); // Activo por default
+type SortField =
+  | "Login"
+  | "Nombre"
+  | "Codigo"
+  | "NumeroDocumento"
+  | "Email"
+  | "Estado"
+  | "Contratista"
+  | "Perfil";
 
-  // ===== Orden =====
-  const [sortBy, setSortBy] = useState<"Login" | "Nombre" | "Codigo" | "NumeroDocumento">("Login");
+const ConsultUsersPage = () => {
+  const [nameFilter, setNameFilter] = useState("");
+  const [userFilter, setUserFilter] = useState("");
+  const [documentFilter, setDocumentFilter] = useState("");
+  const [contractorFilter, setContractorFilter] = useState("Todos");
+  const [statusFilter, setStatusFilter] = useState<"Activo" | "Inactivo">("Activo");
+
+  const [sortBy, setSortBy] = useState<SortField>("Login");
   const [sortDesc, setSortDesc] = useState(true);
 
-  // ===== Paginación =====
-  const [page, setPage] = useState(1); // Page (1-based)
-  const perPage = useAppSelector(selectPerPage); // <- desde Redux
+  const [page, setPage] = useState(1);
+  const perPage = useAppSelector(selectPerPage);
 
-  // ===== Datos / UI =====
   const [rows, setRows] = useState<UserRow[]>([]);
-  const [total, setTotal] = useState(0); // total del backend
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Contratistas
   const [contractors, setContractors] = useState<ContractorItem[]>([]);
   const [loadingContractors, setLoadingContractors] = useState(false);
 
-  // ✅ Si "Todos" → undefined; si no → number
   const idContratistaParam = useMemo<number | undefined>(() => {
     return contractorFilter === "Todos" ? undefined : Number(contractorFilter);
   }, [contractorFilter]);
 
-  // Cargar contratistas para el select
   const fetchContractors = useCallback(async () => {
     try {
       setLoadingContractors(true);
-      const list = await getContractors.exec({ Activo: true }); // retorna Contractor[]
+      const list = await getContractors.exec({ Activo: true });
       const ordered = (list ?? [])
         .filter((c: ContractorItem) => c.activo)
         .sort((a: ContractorItem, b: ContractorItem) =>
@@ -115,7 +116,7 @@ const ConsultUsersPage = () => {
     try {
       const query: UsersQuery = {
         Page: page,
-        Size: perPage, // <- viene de Redux
+        Size: perPage,
         Login: userFilter.trim() || undefined,
         Nombre: nameFilter.trim() || undefined,
         Codigo: undefined,
@@ -129,30 +130,20 @@ const ConsultUsersPage = () => {
       const resp = await getUserPaginated.exec(query);
       setRows((resp.items ?? []) as UserRow[]);
       setTotal(resp.meta?.total ?? 0);
-    } catch (e: unknown) {
+    } catch (e: any) {
       console.error(e);
-
-      if (typeof e === "object" && e !== null) {
-        const err = e as {
-          response?: { data?: { title?: string; message?: string } };
-          message?: string;
-        };
-
-        setError(
-          err.response?.data?.title ||
-            err.response?.data?.message ||
-            err.message ||
-            "No se pudo cargar la lista de usuarios."
-        );
-      } else {
-        setError("No se pudo cargar la lista de usuarios.");
-      }
+      setError(
+        e?.response?.data?.title ||
+          e?.response?.data?.message ||
+          e?.message ||
+          "No se pudo cargar la lista de usuarios."
+      );
     } finally {
       setLoading(false);
     }
   }, [
     page,
-    perPage, // <- cuando cambie globalmente, se vuelve a pedir
+    perPage,
     userFilter,
     nameFilter,
     documentFilter,
@@ -162,12 +153,10 @@ const ConsultUsersPage = () => {
     sortDesc,
   ]);
 
-  // Cargar contratistas una sola vez
   useEffect(() => {
     fetchContractors();
   }, [fetchContractors]);
 
-  // Cargar usuarios cuando cambien filtros/paginación/orden
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
@@ -180,9 +169,34 @@ const ConsultUsersPage = () => {
       error: "Error en el servidor.",
     });
 
-    // si eliminaste el último de la página, retrocede una página
     setPage((p) => (rows.length === 1 && p > 1 ? p - 1 : p));
     fetchUsers();
+  };
+
+  const handleSortClick = (field: SortField) => {
+    if (sortBy === field) {
+      setSortDesc((prev) => !prev);
+    } else {
+      setSortBy(field);
+      setSortDesc(false);
+    }
+    setPage(1);
+  };
+
+  const renderSortIcon = (field: SortField) => {
+    if (sortBy === field) {
+      return sortDesc ? (
+        <ArrowDown className="inline h-4 w-4 ml-1" />
+      ) : (
+        <ArrowUp className="inline h-4 w-4 ml-1" />
+      );
+    }
+    return <ArrowUp className="inline h-4 w-4 ml-1 opacity-50" />;
+  };
+
+  const renderHeaderClass = (field: SortField) => {
+    const base = "text-white cursor-pointer select-none px-4 py-2";
+    return sortBy === field ? `${base} bg-primary/70 font-semibold` : base;
   };
 
   return (
@@ -259,12 +273,7 @@ const ConsultUsersPage = () => {
               <SelectTrigger id="contratista" className="h-12 w-full">
                 <SelectValue placeholder="Contratista" />
               </SelectTrigger>
-              <SelectContent
-                className="w-[--radix-select-trigger-width] max-h-64 overflow-auto"
-                position="popper"
-                side="bottom"
-                align="start"
-              >
+              <SelectContent className="w-[--radix-select-trigger-width] max-h-64 overflow-auto">
                 <SelectItem value="Todos">Todos</SelectItem>
                 {loadingContractors ? (
                   <SelectItem value="__loading" disabled>
@@ -304,63 +313,63 @@ const ConsultUsersPage = () => {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Orden */}
-          <div className="grid gap-2">
-            <Label htmlFor="orden">Orden</Label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Select
-                value={sortBy}
-                onValueChange={(v: "Login" | "Nombre" | "Codigo" | "NumeroDocumento") => {
-                  setSortBy(v);
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger id="orden" className="h-12 w-full sm:w-1/2">
-                  <SelectValue placeholder="Campo" />
-                </SelectTrigger>
-                <SelectContent className="w-[--radix-select-trigger-width] max-h-64 overflow-auto">
-                  <SelectItem value="Login">Usuario</SelectItem>
-                  <SelectItem value="Nombre">Nombre</SelectItem>
-                  <SelectItem value="Codigo">Código</SelectItem>
-                  <SelectItem value="NumeroDocumento">Documento</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={sortDesc ? "desc" : "asc"}
-                onValueChange={(v: "asc" | "desc") => {
-                  setSortDesc(v === "desc");
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="h-12 w-full sm:w-1/2">
-                  <SelectValue placeholder="Dirección" />
-                </SelectTrigger>
-                <SelectContent className="w-[--radix-select-trigger-width] max-h-64 overflow-auto">
-                  <SelectItem value="asc">Asc</SelectItem>
-                  <SelectItem value="desc">Desc</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Tabla */}
       <div className="rounded-md border overflow-x-auto">
         <Table>
-          <TableHeader className="bg-primary text-white">
+          <TableHeader className="bg-primary">
             <TableRow>
-              <TableHead className="text-white">Usuario</TableHead>
-              <TableHead className="text-white">Nombre</TableHead>
-              <TableHead className="text-white">Email</TableHead>
-              <TableHead className="text-white">Código</TableHead>
-              <TableHead className="text-white">Documento</TableHead>
-              <TableHead className="text-white">Estado</TableHead>
-              <TableHead className="text-white">Contratista</TableHead>
-              <TableHead className="text-white">Perfil</TableHead>
-              <TableHead className="text-white">Acciones</TableHead>
+              <TableHead
+                className={renderHeaderClass("Login")}
+                onClick={() => handleSortClick("Login")}
+              >
+                Usuario {renderSortIcon("Login")}
+              </TableHead>
+              <TableHead
+                className={renderHeaderClass("Nombre")}
+                onClick={() => handleSortClick("Nombre")}
+              >
+                Nombre {renderSortIcon("Nombre")}
+              </TableHead>
+              <TableHead
+                className={renderHeaderClass("Email")}
+                onClick={() => handleSortClick("Email")}
+              >
+                Email {renderSortIcon("Email")}
+              </TableHead>
+              <TableHead
+                className={renderHeaderClass("Codigo")}
+                onClick={() => handleSortClick("Codigo")}
+              >
+                Código {renderSortIcon("Codigo")}
+              </TableHead>
+              <TableHead
+                className={renderHeaderClass("NumeroDocumento")}
+                onClick={() => handleSortClick("NumeroDocumento")}
+              >
+                Documento {renderSortIcon("NumeroDocumento")}
+              </TableHead>
+              <TableHead
+                className={renderHeaderClass("Estado")}
+                onClick={() => handleSortClick("Estado")}
+              >
+                Estado {renderSortIcon("Estado")}
+              </TableHead>
+              <TableHead
+                className={renderHeaderClass("Contratista")}
+                onClick={() => handleSortClick("Contratista")}
+              >
+                Contratista {renderSortIcon("Contratista")}
+              </TableHead>
+              <TableHead
+                className={renderHeaderClass("Perfil")}
+                onClick={() => handleSortClick("Perfil")}
+              >
+                Perfil {renderSortIcon("Perfil")}
+              </TableHead>
+              <TableHead className="text-white px-4 py-2">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -379,9 +388,7 @@ const ConsultUsersPage = () => {
             ) : rows.length > 0 ? (
               rows.map((u) => (
                 <TableRow key={u.id}>
-                  <TableCell className="max-w-[160px] truncate">
-                    <p className="text-primary hover:underline">{u.login}</p>
-                  </TableCell>
+                  <TableCell className="max-w-[160px] truncate">{u.login}</TableCell>
                   <TableCell className="max-w-[220px] truncate">{u.nombreCompleto}</TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell>{u.codigo}</TableCell>
@@ -424,7 +431,6 @@ const ConsultUsersPage = () => {
         </Table>
       </div>
 
-      {/* Paginación (reutilizable) */}
       <PaginationBar
         total={total}
         page={page}

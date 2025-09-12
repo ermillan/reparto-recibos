@@ -29,7 +29,11 @@ import type { ContractorItem } from "@/domain/contractors/contractor.type";
 // Infra repos
 import { ContractorApi, ProfileApi, UserApi } from "@/infrastructure/services/recibos.api";
 
-type ProfileOption = { id: number; nombre?: string | null };
+type ProfileOption = {
+  id: number;
+  nombre?: string | null;
+  requiereContratista?: boolean;
+};
 
 // Instancias
 const userApi = new UserApi();
@@ -109,6 +113,7 @@ const CreateUserPage = () => {
         const profOpts = (profs ?? []).map((p: any) => ({
           id: p.id,
           nombre: p.nombre,
+          requiereContratista: p.requiereContratista ?? false,
         })) as ProfileOption[];
         setProfiles(profOpts);
 
@@ -161,10 +166,14 @@ const CreateUserPage = () => {
     validateField(name, value);
   };
 
+  const selectedProfile = profiles.find((p) => p.id === selectedProfileId);
+  const requiresContractor = selectedProfile?.requiereContratista ?? false;
+
   const isInvalid = () => {
     if (!form.nombre.trim() || !form.apellidoPaterno.trim() || !form.usuario.trim()) return true;
     if (!regex.documento.test(form.documento)) return true;
     if (Object.values(errors).some(Boolean)) return true;
+    if (requiresContractor && !selectedContractorId) return true;
     return false;
   };
 
@@ -181,7 +190,7 @@ const CreateUserPage = () => {
     direccion: form.direccion || undefined,
     activo: form.estado === "Activo",
     perfilIds: selectedProfileId ? [selectedProfileId] : [],
-    contratistaIds: selectedContractorId ? [selectedContractorId] : [],
+    contratistaIds: requiresContractor && selectedContractorId ? [selectedContractorId] : [],
   });
 
   const buildUpdatePayload = (): UpdateUserRequest => ({
@@ -197,7 +206,7 @@ const CreateUserPage = () => {
     direccion: form.direccion || undefined,
     activo: form.estado === "Activo",
     perfilIds: selectedProfileId ? [selectedProfileId] : [],
-    contratistaIds: selectedContractorId ? [selectedContractorId] : [],
+    contratistaIds: requiresContractor && selectedContractorId ? [selectedContractorId] : [],
   });
 
   const handleSave = async () => {
@@ -402,7 +411,7 @@ const CreateUserPage = () => {
 
           {/* Perfil */}
           <div className="grid gap-2">
-            <Label htmlFor="perfil">Seleccione el perfil</Label>
+            <Label htmlFor="perfil">Seleccione el perfil *</Label>
             <Select
               value={selectedProfileId ? String(selectedProfileId) : ""}
               onValueChange={(val) => setSelectedProfileId(Number(val))}
@@ -421,26 +430,28 @@ const CreateUserPage = () => {
             </Select>
           </div>
 
-          {/* Contratista */}
-          <div className="grid gap-2">
-            <Label htmlFor="contratista">Seleccione el contratista</Label>
-            <Select
-              value={selectedContractorId ? String(selectedContractorId) : ""}
-              onValueChange={(val) => setSelectedContractorId(Number(val))}
-              disabled={saving || loading || contractors.length === 0}
-            >
-              <SelectTrigger id="contratista" className="w-full">
-                <SelectValue placeholder={loading ? "Cargando..." : "Seleccione contratista"} />
-              </SelectTrigger>
-              <SelectContent>
-                {contractors.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.nombre ?? `Contratista #${c.id}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Contratista (solo si perfil requiere contratista) */}
+          {requiresContractor && (
+            <div className="grid gap-2">
+              <Label htmlFor="contratista">Seleccione el contratista *</Label>
+              <Select
+                value={selectedContractorId ? String(selectedContractorId) : ""}
+                onValueChange={(val) => setSelectedContractorId(Number(val))}
+                disabled={saving || loading || contractors.length === 0}
+              >
+                <SelectTrigger id="contratista" className="w-full">
+                  <SelectValue placeholder={loading ? "Cargando..." : "Seleccione contratista"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {contractors.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.nombre ?? `Contratista #${c.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </div>
 
