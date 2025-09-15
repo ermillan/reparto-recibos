@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { UploadCloud, Info, X, CheckCircle2, AlertTriangle } from "lucide-react";
+import { UploadCloud, Info, X, CheckCircle2, AlertTriangle, FileSpreadsheet } from "lucide-react";
 
 type TabKey = "uploaded" | "new";
 
@@ -80,13 +80,12 @@ export default function ReceiptUploadPage() {
 
   const canUpload = useMemo(() => files.length > 0 && !uploading, [files.length, uploading]);
 
-  // Simulación de upload: enchufa aquí tu API real
+  // Simulación de upload
   const handleUpload = async () => {
     if (!canUpload) return;
     try {
       setUploading(true);
-      // TODO: reemplaza por tu llamada real
-      await new Promise((r) => setTimeout(r, 1200));
+      await new Promise((r) => setTimeout(r, 1200)); // simula API
       setFiles([]);
       setErrors([]);
       alert("Archivos subidos correctamente");
@@ -183,7 +182,7 @@ export default function ReceiptUploadPage() {
               </p>
             </div>
 
-            {/* Callout de instrucciones */}
+            {/* Callout */}
             <section className="mx-auto mt-6 max-w-3xl rounded-xl border bg-emerald-50 p-4 text-emerald-800">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 rounded-full bg-emerald-600/10 p-1.5 text-emerald-700">
@@ -248,7 +247,7 @@ export default function ReceiptUploadPage() {
               </div>
             </section>
 
-            {/* Lista de archivos seleccionados */}
+            {/* Lista de archivos */}
             {(files.length > 0 || errors.length > 0) && (
               <section className="mx-auto mt-4 max-w-3xl space-y-3">
                 {errors.length > 0 && (
@@ -292,8 +291,8 @@ export default function ReceiptUploadPage() {
               </section>
             )}
 
-            {/* Botón de subir */}
-            <div className="mx-auto mt-6 flex max-w-3xl justify-center">
+            {/* Botones de acción */}
+            <div className="mx-auto mt-6 flex max-w-3xl justify-center gap-3">
               <button
                 onClick={handleUpload}
                 disabled={!canUpload}
@@ -305,9 +304,18 @@ export default function ReceiptUploadPage() {
                 <UploadCloud className="h-4 w-4" />
                 {uploading ? "Subiendo..." : "Subir archivo de recibos"}
               </button>
+
+              <a
+                href={`/FrontRepartoRecibos/template/plantilla-recibos.xlsx`}
+                download
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Descargar plantilla
+              </a>
             </div>
 
-            {/* Hint de éxito */}
+            {/* Hint */}
             {files.length === 0 && errors.length === 0 && !uploading && (
               <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-muted-foreground">
                 Después de subir, podrás ver el estado en la pestaña “Archivo(s) ya cargado(s)”.
@@ -316,7 +324,7 @@ export default function ReceiptUploadPage() {
           </>
         ) : (
           <>
-            {/* Filtros - versión ligera */}
+            {/* Filtros */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <label className="text-xs text-muted-foreground">Periodo</label>
@@ -363,7 +371,7 @@ export default function ReceiptUploadPage() {
               </div>
             </div>
 
-            {/* Tabla (mock) */}
+            {/* Tabla mock */}
             <div className="mt-4 overflow-x-auto rounded-lg border">
               <table className="min-w-full text-sm">
                 <thead>
