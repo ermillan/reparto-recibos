@@ -39,8 +39,6 @@ export function useAuth() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log("⏱ B Revisando token a:", new Date().toLocaleTimeString());
-
       if (token && isTokenExpired()) {
         console.warn("⚠️ Token expirado, cerrando sesión...");
         logoutUser();

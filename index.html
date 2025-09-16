@@ -2,11 +2,11 @@
 <html lang="es" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
     <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=5"
+      name="description"
+      content="Reparto Recibos - Panel web moderno para gestionar y visualizar recibos de manera rápida y sencilla."
     />
-    <meta name="description" content="Reparto Recibos - Panel web moderno para gestionar y visualizar recibos de manera rápida y sencilla." />
     <meta name="keywords" content="Reparto, Recibos, Gestión, Facturación, Pagos" />
     <meta name="author" content="Ayesa" />
     <!-- <meta name="theme-color" content="#0f172a" /> -->
@@ -32,13 +32,33 @@
     <title>Reparto Recibos</title>
   </head>
   <body class="bg-gray-50 text-gray-900 antialiased">
-    <noscript>
-      Necesitas habilitar JavaScript para ejecutar esta aplicación.
-    </noscript>
+    <noscript> Necesitas habilitar JavaScript para ejecutar esta aplicación. </noscript>
 
     <div id="root"></div>
 
     <!-- Script principal de Vite -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
+  <script>
+    (function () {
+      const styleTitle = `
+      color: red;
+      font-size: 40px;
+      font-weight: bold;
+      text-shadow: 2px 2px 0 black;
+    `;
+
+      const styleMessage = `
+      color: black;
+      font-size: 16px;
+      font-weight: normal;
+    `;
+
+      console.log("%c⚠️ ADVERTENCIA ⚠️", styleTitle);
+      console.log(
+        "%cEsta consola es solo para el equipo profesional de Cálidda.\nNo ingreses ni pegues código aquí, podría comprometer tu seguridad.",
+        styleMessage
+      );
+    })();
+  </script>
 </html>
