@@ -193,7 +193,7 @@ const ConsultProfilesPage = () => {
         <Button asChild variant="ghost" className="flex items-center gap-2">
           <NavLink to="/seguridad/perfiles/crear-perfil">
             <Plus className="h-4 w-4" />
-            <span>Agregar</span>
+            <span>Crear Perfil</span>
           </NavLink>
         </Button>
       </div>

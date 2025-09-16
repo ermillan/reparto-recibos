@@ -7,6 +7,7 @@ export interface AuthUser {
   name: string;
   login?: string;
   nombre?: string;
+  roles?: string;
   // agrega más campos reales si los tienes
 }
 

@@ -90,7 +90,7 @@ export function AppSidebar() {
             <div className="font-semibold leading-tight text-wrap">
               Sistema de entrega de recibos
             </div>
-            <div className="text-xs opacity-85 truncate">{user?.login}</div>
+            <div className="text-xs opacity-85 truncate">{user?.roles}</div>
             <div className="text-xs opacity-85 truncate">{user?.nombre}</div>
           </div>
         </div>

@@ -24,8 +24,10 @@ import {
 } from "@/application/auth";
 import { AuthApi } from "@/infrastructure/services/recibos.api";
 
-// 🔧 Config
-import { OTP_LENGTH, OTP_WINDOW_MINUTES } from "@/config/auth";
+import { ENV } from "@/infrastructure/env/config";
+
+export const OTP_LENGTH = ENV.OTP_LENGTH;
+export const OTP_WINDOW_MINUTES = ENV.OTP_WINDOW_MINUTES;
 
 // Props internos
 type LoginHeaderProps = { isForgotPassword: boolean };

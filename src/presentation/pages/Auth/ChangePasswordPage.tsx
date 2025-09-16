@@ -142,7 +142,7 @@ export default function ChangePasswordPage() {
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
             <CardDescription className="text-gray-700 text-md font-semibold mb-1">
-              Sistema de Reparto de Recibos
+              Reparto de Recibos
             </CardDescription>
             <CardTitle className="text-primary-500 text-3xl font-extrabold">
               Cambiar Contraseña

@@ -6,6 +6,8 @@ export const ENV = {
   TOKEN_COOKIE: (import.meta.env.VITE_TOKEN_COOKIE as string) ?? "auth_token",
   COOKIE_SECURE: (import.meta.env.VITE_COOKIE_SECURE as string) === "true",
   COOKIE_SAMESITE: (import.meta.env.VITE_COOKIE_SAMESITE as string) || "Lax",
+  OTP_LENGTH: import.meta.env.VITE_OTP_LENGTH as number,
+  OTP_WINDOW_MINUTES: import.meta.env.VITE_OTP_WINDOW_MINUTES as number,
 };
 
 export const API_BASE_URL = (ENV.VITE_ENV === "prd" ? ENV.API_PRD : ENV.API_DEV) || "";

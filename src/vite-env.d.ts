@@ -7,4 +7,6 @@ interface ImportMetaEnv {
   readonly VITE_TOKEN_COOKIE: string;
   readonly VITE_COOKIE_SECURE: string;
   readonly VITE_COOKIE_SAMESITE: string;
+  readonly VITE_OTP_LENGTH: number;
+  readonly VITE_OTP_WINDOW_MINUTES: number;
 }

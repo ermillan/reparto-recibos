@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, PenIcon, Trash2, ArrowDown, ArrowUp } from "lucide-react";
+import { Plus, PenIcon, Trash2, ArrowDown, ArrowUp, RotateCcw } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -65,6 +65,7 @@ type SortField =
   | "Email"
   | "Estado"
   | "Contratista"
+  | "Id"
   | "Perfil";
 
 const ConsultUsersPage = () => {
@@ -74,7 +75,7 @@ const ConsultUsersPage = () => {
   const [contractorFilter, setContractorFilter] = useState("Todos");
   const [statusFilter, setStatusFilter] = useState<"Activo" | "Inactivo">("Activo");
 
-  const [sortBy, setSortBy] = useState<SortField>("Login");
+  const [sortBy, setSortBy] = useState<SortField>("Id");
   const [sortDesc, setSortDesc] = useState(true);
 
   const [page, setPage] = useState(1);
@@ -195,7 +196,7 @@ const ConsultUsersPage = () => {
   };
 
   const renderHeaderClass = (field: SortField) => {
-    const base = "text-white cursor-pointer select-none px-4 py-2";
+    const base = "cursor-pointer select-none px-4 py-2";
     return sortBy === field ? `${base} bg-primary/70 font-semibold` : base;
   };
 
@@ -207,7 +208,7 @@ const ConsultUsersPage = () => {
         <Button asChild variant="ghost" className="w-full sm:w-auto justify-center gap-2">
           <NavLink to="/seguridad/usuarios/crear-usuario">
             <Plus className="h-4 w-4" />
-            <span>Agregar</span>
+            <span>Crear Usuario</span>
           </NavLink>
         </Button>
       </div>
@@ -312,6 +313,24 @@ const ConsultUsersPage = () => {
                 <SelectItem value="Inactivo">Inactivo</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          {/* Botón Reset */}
+          <div className="w-full h-full flex items-center justify-center">
+            <Button
+              onClick={() => {
+                setNameFilter("");
+                setUserFilter("");
+                setDocumentFilter("");
+                setContractorFilter("Todos");
+                setStatusFilter("Activo");
+                setPage(1);
+                fetchUsers();
+              }}
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Actualizar
+            </Button>
           </div>
         </div>
       </div>

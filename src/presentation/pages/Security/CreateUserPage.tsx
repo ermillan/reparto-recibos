@@ -173,7 +173,13 @@ const CreateUserPage = () => {
     if (!form.nombre.trim() || !form.apellidoPaterno.trim() || !form.usuario.trim()) return true;
     if (!regex.documento.test(form.documento)) return true;
     if (Object.values(errors).some(Boolean)) return true;
+
+    // ✅ Perfil obligatorio
+    if (!selectedProfileId) return true;
+
+    // ✅ Si requiere contratista, también obligatorio
     if (requiresContractor && !selectedContractorId) return true;
+
     return false;
   };
 
@@ -273,7 +279,28 @@ const CreateUserPage = () => {
       <div className="rounded-md border p-6 bg-card shadow-sm">
         <h2 className="text-sm font-semibold text-primary mb-4">Datos Generales</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Perfil */}
+          <div className="grid gap-2 md:col-span-1 place-items-center">
+            <Label htmlFor="perfil">Seleccione el perfil *</Label>
+            <Select
+              value={selectedProfileId ? String(selectedProfileId) : ""}
+              onValueChange={(val) => setSelectedProfileId(Number(val))}
+              disabled={saving || loading || profiles.length === 0}
+            >
+              <SelectTrigger id="perfil" className="w-full">
+                <SelectValue placeholder={loading ? "Cargando..." : "Seleccione perfil"} />
+              </SelectTrigger>
+              <SelectContent>
+                {profiles.map((p) => (
+                  <SelectItem key={p.id} value={String(p.id)}>
+                    {p.nombre ?? `Perfil #${p.id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Usuario */}
           <div className="grid gap-2 md:col-span-2 place-items-center">
             <Label htmlFor="usuario" className="text-center font-semibold">
@@ -295,7 +322,7 @@ const CreateUserPage = () => {
 
           {/* Nombre */}
           <div className="grid gap-2">
-            <Label htmlFor="nombre">Ingrese el nombre *</Label>
+            <Label htmlFor="nombre">Nombre *</Label>
             <Input
               id="nombre"
               name="nombre"
@@ -309,7 +336,7 @@ const CreateUserPage = () => {
 
           {/* Apellido Paterno */}
           <div className="grid gap-2">
-            <Label htmlFor="apellidoPaterno">Ingrese el apellido paterno *</Label>
+            <Label htmlFor="apellidoPaterno">Apellido Paterno *</Label>
             <Input
               id="apellidoPaterno"
               name="apellidoPaterno"
@@ -322,7 +349,7 @@ const CreateUserPage = () => {
 
           {/* Apellido Materno */}
           <div className="grid gap-2">
-            <Label htmlFor="apellidoMaterno">Ingrese el apellido materno *</Label>
+            <Label htmlFor="apellidoMaterno">Apellido Materno *</Label>
             <Input
               id="apellidoMaterno"
               name="apellidoMaterno"
@@ -335,7 +362,7 @@ const CreateUserPage = () => {
 
           {/* Documento */}
           <div className="grid gap-2">
-            <Label htmlFor="documento">Ingrese el número de documento *</Label>
+            <Label htmlFor="documento">Número de documento *</Label>
             <Input
               id="documento"
               name="documento"
@@ -349,7 +376,7 @@ const CreateUserPage = () => {
 
           {/* Email */}
           <div className="grid gap-2">
-            <Label htmlFor="email">Ingrese el correo electrónico</Label>
+            <Label htmlFor="email">Correo electrónico</Label>
             <Input
               id="email"
               name="email"
@@ -364,7 +391,7 @@ const CreateUserPage = () => {
 
           {/* Celular */}
           <div className="grid gap-2">
-            <Label htmlFor="celular">Ingrese el número de celular</Label>
+            <Label htmlFor="celular">Número de celular</Label>
             <Input
               id="celular"
               name="celular"
@@ -377,8 +404,8 @@ const CreateUserPage = () => {
           </div>
 
           {/* Dirección */}
-          <div className="grid gap-2">
-            <Label htmlFor="direccion">Ingrese la dirección</Label>
+          {/* <div className="grid gap-2">
+            <Label htmlFor="direccion">Dirección</Label>
             <Input
               id="direccion"
               name="direccion"
@@ -387,7 +414,7 @@ const CreateUserPage = () => {
               placeholder="Ej: Av. Siempre Viva 742"
               disabled={saving || loading}
             />
-          </div>
+          </div> */}
 
           {/* Estado */}
           <div className="grid gap-2">
@@ -405,27 +432,6 @@ const CreateUserPage = () => {
               <SelectContent>
                 <SelectItem value="Activo">Activo</SelectItem>
                 <SelectItem value="Inactivo">Inactivo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Perfil */}
-          <div className="grid gap-2">
-            <Label htmlFor="perfil">Seleccione el perfil *</Label>
-            <Select
-              value={selectedProfileId ? String(selectedProfileId) : ""}
-              onValueChange={(val) => setSelectedProfileId(Number(val))}
-              disabled={saving || loading || profiles.length === 0}
-            >
-              <SelectTrigger id="perfil" className="w-full">
-                <SelectValue placeholder={loading ? "Cargando..." : "Seleccione perfil"} />
-              </SelectTrigger>
-              <SelectContent>
-                {profiles.map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>
-                    {p.nombre ?? `Perfil #${p.id}`}
-                  </SelectItem>
-                ))}
               </SelectContent>
             </Select>
           </div>
@@ -450,6 +456,9 @@ const CreateUserPage = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {!selectedContractorId && (
+                <span className="text-xs text-red-500">Debe seleccionar un contratista</span>
+              )}
             </div>
           )}
         </div>

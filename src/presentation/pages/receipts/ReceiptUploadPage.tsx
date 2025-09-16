@@ -3,7 +3,7 @@ import { UploadCloud, Info, X, CheckCircle2, AlertTriangle, FileSpreadsheet } fr
 
 type TabKey = "uploaded" | "new";
 
-const ACCEPTED_TYPES = [".fis", ".zip", ".csv", ".xlsx", ".xls", ".png"];
+const ACCEPTED_TYPES = [".csv", ".xlsx", ".xls"];
 const MAX_SIZE_MB = 10;
 
 function classNames(...xs: Array<string | false | undefined>) {
@@ -164,7 +164,7 @@ export default function ReceiptUploadPage() {
             onClick={() => setTab("new")}
             aria-current={tab === "new" ? "page" : undefined}
           >
-            Archivo(s) nuevo(s)
+            Carga de archivo(s)
           </button>
         </div>
       </header>
@@ -174,7 +174,7 @@ export default function ReceiptUploadPage() {
           <>
             {/* Title & description */}
             <div className="text-center">
-              <h1 className="text-2xl font-semibold text-sky-700">Gestión de Recibos Físicos</h1>
+              <h1 className="text-2xl font-semibold text-sky-700">Carga de archivos</h1>
               <p className="mx-auto mt-2 max-w-3xl text-sm text-muted-foreground">
                 Utiliza esta herramienta para subir archivos con recibos físicos (tipo <b>FIS</b>)
                 de forma masiva. Estos archivos son exportados desde la plataforma <b>SAP</b> cada
@@ -195,8 +195,7 @@ export default function ReceiptUploadPage() {
                       Solo se deben subir archivos con recibos de tipo <b>FIS</b>.
                     </li>
                     <li>
-                      Si el archivo pesa más de <b>{MAX_SIZE_MB}MB</b>, es recomendable
-                      particionarlo por contratista.
+                      El archivo no debe pesar más de <b>{MAX_SIZE_MB}MB</b>.
                     </li>
                     <li>Formatos permitidos: {ACCEPTED_TYPES.join(", ")}</li>
                   </ul>
