@@ -1,3 +1,4 @@
+// src/pages/security/users/ConsultUsersPage.tsx
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, PenIcon, Trash2, ArrowDown, ArrowUp, RotateCcw } from "lucide-react";
+import {
+  Plus,
+  PenIcon,
+  Trash2,
+  ArrowDown,
+  ArrowUp,
+  RotateCcw,
+  FileSpreadsheet,
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -34,6 +43,15 @@ import { ContractorApi, UserApi } from "@/infrastructure/services/recibos.api";
 import PaginationBar from "@/components/common/PaginationBar";
 import { useAppSelector } from "@/store/hooks";
 import { selectPerPage } from "@/store/slices/tablePrefs.slice";
+
+// Dialog de confirmación
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const userApi = new UserApi();
 const contractorApi = new ContractorApi();
@@ -88,6 +106,10 @@ const ConsultUsersPage = () => {
 
   const [contractors, setContractors] = useState<ContractorItem[]>([]);
   const [loadingContractors, setLoadingContractors] = useState(false);
+
+  // Modal confirmación
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
 
   const idContratistaParam = useMemo<number | undefined>(() => {
     return contractorFilter === "Todos" ? undefined : Number(contractorFilter);
@@ -174,6 +196,19 @@ const ConsultUsersPage = () => {
     fetchUsers();
   };
 
+  const confirmDeleteUser = (user: UserRow) => {
+    setSelectedUser(user);
+    setOpenConfirm(true);
+  };
+
+  const proceedDelete = async () => {
+    if (selectedUser) {
+      await handleDeleteUser(selectedUser.id);
+      setSelectedUser(null);
+      setOpenConfirm(false);
+    }
+  };
+
   const handleSortClick = (field: SortField) => {
     if (sortBy === field) {
       setSortDesc((prev) => !prev);
@@ -205,12 +240,30 @@ const ConsultUsersPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl font-semibold text-primary">Consulta de Usuarios</h1>
-        <Button asChild variant="ghost" className="w-full sm:w-auto justify-center gap-2">
-          <NavLink to="/seguridad/usuarios/crear-usuario">
-            <Plus className="h-4 w-4" />
-            <span>Crear Usuario</span>
-          </NavLink>
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto justify-center">
+          <Button asChild variant="ghost" className="justify-center gap-2">
+            <NavLink to="/seguridad/usuarios/crear-usuario">
+              <Plus className="h-4 w-4" />
+              <span>Crear Usuario</span>
+            </NavLink>
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-center gap-2"
+            onClick={() => {
+              setNameFilter("");
+              setUserFilter("");
+              setDocumentFilter("");
+              setContractorFilter("Todos");
+              setStatusFilter("Activo");
+              setPage(1);
+              fetchUsers();
+            }}
+          >
+            <RotateCcw className="h-4 w-4" />
+            <span>Actualizar</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -274,7 +327,7 @@ const ConsultUsersPage = () => {
               <SelectTrigger id="contratista" className="h-12 w-full">
                 <SelectValue placeholder="Contratista" />
               </SelectTrigger>
-              <SelectContent className="w-[--radix-select-trigger-width] max-h-64 overflow-auto">
+              <SelectContent className="max-h-64 overflow-auto">
                 <SelectItem value="Todos">Todos</SelectItem>
                 {loadingContractors ? (
                   <SelectItem value="__loading" disabled>
@@ -308,29 +361,23 @@ const ConsultUsersPage = () => {
               <SelectTrigger id="estado" className="h-12 w-full">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
-              <SelectContent className="w-[--radix-select-trigger-width] max-h-64 overflow-auto">
+              <SelectContent className="max-h-64 overflow-auto">
                 <SelectItem value="Activo">Activo</SelectItem>
                 <SelectItem value="Inactivo">Inactivo</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {/* Botón Reset */}
+
+          {/* Botón Descargar Excel */}
           <div className="w-full h-full flex items-center justify-center">
-            <Button
-              onClick={() => {
-                setNameFilter("");
-                setUserFilter("");
-                setDocumentFilter("");
-                setContractorFilter("Todos");
-                setStatusFilter("Activo");
-                setPage(1);
-                fetchUsers();
-              }}
-              className="flex items-center gap-2"
+            <a
+              href={`/`}
+              // download
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
             >
-              <RotateCcw className="h-4 w-4" />
-              Actualizar
-            </Button>
+              <FileSpreadsheet className="h-4 w-4" />
+              Descargar
+            </a>
           </div>
         </div>
       </div>
@@ -430,7 +477,7 @@ const ConsultUsersPage = () => {
                       <Button
                         variant="outline"
                         aria-label="Eliminar Usuario"
-                        onClick={() => handleDeleteUser(u.id)}
+                        onClick={() => confirmDeleteUser(u)}
                         className="transition-colors ease-in-out duration-300 hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -457,6 +504,26 @@ const ConsultUsersPage = () => {
         isLoading={loading}
         className="mt-2"
       />
+
+      {/* Modal confirmación */}
+      <Dialog open={openConfirm} onOpenChange={setOpenConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Está seguro de eliminar este usuario?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {selectedUser
+              ? `El usuario "${selectedUser.nombreCompleto}" (${selectedUser.login}) será eliminado permanentemente.`
+              : "Esta acción no se puede deshacer."}
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenConfirm(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={proceedDelete}>Sí, eliminar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

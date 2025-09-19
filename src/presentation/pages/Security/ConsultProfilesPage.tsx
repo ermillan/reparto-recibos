@@ -35,6 +35,15 @@ import PaginationBar from "@/components/common/PaginationBar";
 import { useAppSelector } from "@/store/hooks";
 import { selectPerPage } from "@/store/slices/tablePrefs.slice";
 
+// Dialog de confirmación
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
 const ROWS_SKELETON = 3;
 
 const profileApi = new ProfileApi();
@@ -98,6 +107,10 @@ const ConsultProfilesPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal confirmación
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
   const mapStatusToActivo = (s: "activo" | "inactivo"): boolean => s === "activo";
 
   const fetchProfiles = useCallback(async () => {
@@ -106,7 +119,7 @@ const ConsultProfilesPage = () => {
     try {
       const query: ProfilesPaginatedQuery = {
         page,
-        size: perPage, // <- usa Redux
+        size: perPage,
         Activo: mapStatusToActivo(status),
         nombre: description.trim() || undefined,
       };
@@ -182,6 +195,19 @@ const ConsultProfilesPage = () => {
       fetchProfiles();
     } catch (err) {
       console.error("Error al eliminar perfil:", err);
+    }
+  };
+
+  const confirmDeleteProfile = (id: number) => {
+    setSelectedId(id);
+    setOpenConfirm(true);
+  };
+
+  const proceedDelete = async () => {
+    if (selectedId) {
+      await handleDeleteProfile(selectedId);
+      setSelectedId(null);
+      setOpenConfirm(false);
     }
   };
 
@@ -299,7 +325,7 @@ const ConsultProfilesPage = () => {
                         <Button
                           variant="outline"
                           aria-label="Eliminar Perfil"
-                          onClick={() => handleDeleteProfile(p.id)}
+                          onClick={() => confirmDeleteProfile(p.id)}
                           className="transition-colors ease-in-out duration-300 hover:bg-red-50 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -322,6 +348,24 @@ const ConsultProfilesPage = () => {
         isLoading={loading}
         className="mt-2"
       />
+
+      {/* Modal confirmación */}
+      <Dialog open={openConfirm} onOpenChange={setOpenConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Está seguro de eliminar este perfil?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Esta acción no se puede deshacer. El perfil será eliminado permanentemente.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenConfirm(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={proceedDelete}>Sí, eliminar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
