@@ -30,13 +30,15 @@ import {
 import { NavLink } from "react-router-dom";
 import { toast } from "sonner";
 
-// UC
+// UC (Application Layer)
 import { DeleteUser, GetUsersPaginated } from "@/application/users";
 import { GetContractors } from "@/application/contractor";
 
-// Dominio
+// Dominio (Domain Layer)
 import type { ContractorItem } from "@/domain/contractors/contractor.type";
 import type { UsersQuery } from "@/domain/users/user.types";
+
+// Infraestructura (Infrastructure Layer)
 import { ContractorApi, UserApi } from "@/infrastructure/services/recibos.api";
 
 // PaginationBar + Redux perPage
@@ -53,6 +55,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+// Instancias de APIs y casos de uso
 const userApi = new UserApi();
 const contractorApi = new ContractorApi();
 
@@ -60,6 +63,7 @@ const getUserPaginated = new GetUsersPaginated(userApi);
 const getContractors = new GetContractors(contractorApi);
 const deleteUser = new DeleteUser(userApi);
 
+// Tipo de fila de usuario
 type UserRow = {
   id: number;
   codigo: string;
@@ -72,9 +76,10 @@ type UserRow = {
   bloqueado: boolean;
   primeraVez: boolean;
   perfiles: string;
-  contratistas: string;
+  contratistas: string; // puede venir como string o id según tu API
 };
 
+// Campos ordenables
 type SortField =
   | "Login"
   | "Nombre"
@@ -87,23 +92,29 @@ type SortField =
   | "Perfil";
 
 const ConsultUsersPage = () => {
+  // Filtros
   const [nameFilter, setNameFilter] = useState("");
   const [userFilter, setUserFilter] = useState("");
   const [documentFilter, setDocumentFilter] = useState("");
   const [contractorFilter, setContractorFilter] = useState("Todos");
-  const [statusFilter, setStatusFilter] = useState<"Activo" | "Inactivo">("Activo");
+  // Cambiar el tipo de estado
+  const [statusFilter, setStatusFilter] = useState<"Activo" | "Inactivo" | "Todos">("Activo");
 
+  // Orden
   const [sortBy, setSortBy] = useState<SortField>("Id");
   const [sortDesc, setSortDesc] = useState(true);
 
+  // Paginación
   const [page, setPage] = useState(1);
   const perPage = useAppSelector(selectPerPage);
 
+  // Datos de usuarios
   const [rows, setRows] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Datos de contratistas
   const [contractors, setContractors] = useState<ContractorItem[]>([]);
   const [loadingContractors, setLoadingContractors] = useState(false);
 
@@ -111,10 +122,12 @@ const ConsultUsersPage = () => {
   const [openConfirm, setOpenConfirm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
 
+  // Param IdContratista
   const idContratistaParam = useMemo<number | undefined>(() => {
     return contractorFilter === "Todos" ? undefined : Number(contractorFilter);
   }, [contractorFilter]);
 
+  // Fetch contratistas
   const fetchContractors = useCallback(async () => {
     try {
       setLoadingContractors(true);
@@ -133,6 +146,7 @@ const ConsultUsersPage = () => {
     }
   }, []);
 
+  // Fetch usuarios
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -144,7 +158,7 @@ const ConsultUsersPage = () => {
         Nombre: nameFilter.trim() || undefined,
         Codigo: undefined,
         NumeroDocumento: documentFilter.trim() || undefined,
-        Activo: statusFilter === "Activo",
+        Activo: statusFilter === "Todos" ? undefined : statusFilter === "Activo", // 👈 aquí
         IdContratista: idContratistaParam,
         SortBy: sortBy,
         Desc: sortDesc,
@@ -176,6 +190,7 @@ const ConsultUsersPage = () => {
     sortDesc,
   ]);
 
+  // Hooks iniciales
   useEffect(() => {
     fetchContractors();
   }, [fetchContractors]);
@@ -184,6 +199,7 @@ const ConsultUsersPage = () => {
     fetchUsers();
   }, [fetchUsers]);
 
+  // Eliminar usuario
   const handleDeleteUser = async (id: number) => {
     const promise = deleteUser.exec(id);
     await toast.promise(promise, {
@@ -209,6 +225,7 @@ const ConsultUsersPage = () => {
     }
   };
 
+  // Ordenamiento
   const handleSortClick = (field: SortField) => {
     if (sortBy === field) {
       setSortDesc((prev) => !prev);
@@ -263,6 +280,17 @@ const ConsultUsersPage = () => {
             <RotateCcw className="h-4 w-4" />
             <span>Actualizar</span>
           </Button>
+
+          {/* Botón Descargar Excel */}
+          <div className="w-full h-full flex items-center justify-center">
+            <a
+              href={`/`}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Descargar
+            </a>
+          </div>
         </div>
       </div>
 
@@ -349,11 +377,12 @@ const ConsultUsersPage = () => {
           </div>
 
           {/* Estado */}
+          {/* Estado */}
           <div className="grid gap-2">
             <Label htmlFor="estado">Estado</Label>
             <Select
               value={statusFilter}
-              onValueChange={(v: "Activo" | "Inactivo") => {
+              onValueChange={(v: "Activo" | "Inactivo" | "Todos") => {
                 setStatusFilter(v);
                 setPage(1);
               }}
@@ -362,22 +391,11 @@ const ConsultUsersPage = () => {
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent className="max-h-64 overflow-auto">
+                <SelectItem value="Todos">Todos</SelectItem>
                 <SelectItem value="Activo">Activo</SelectItem>
                 <SelectItem value="Inactivo">Inactivo</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Botón Descargar Excel */}
-          <div className="w-full h-full flex items-center justify-center">
-            <a
-              href={`/`}
-              // download
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              Descargar
-            </a>
           </div>
         </div>
       </div>
@@ -460,7 +478,11 @@ const ConsultUsersPage = () => {
                   <TableCell>{u.codigo}</TableCell>
                   <TableCell>{u.numeroDocumento}</TableCell>
                   <TableCell>{u.activo ? "Activo" : "Inactivo"}</TableCell>
-                  <TableCell>{u.contratistas}</TableCell>
+                  <TableCell>
+                    {contractors.find((c) => c.id === Number(u.contratistas))?.nombre ??
+                      u.contratistas ??
+                      "—"}
+                  </TableCell>
                   <TableCell>{u.perfiles}</TableCell>
                   <TableCell>
                     <div className="flex flex-row gap-2">

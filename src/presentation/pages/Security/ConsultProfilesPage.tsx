@@ -96,7 +96,7 @@ const ConsultProfilesPage = () => {
 
   // Filtros
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<"activo" | "inactivo">("activo");
+  const [status, setStatus] = useState<"activo" | "inactivo" | "todos">("activo");
 
   // Paginación
   const [page, setPage] = useState(1);
@@ -111,8 +111,6 @@ const ConsultProfilesPage = () => {
   const [openConfirm, setOpenConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const mapStatusToActivo = (s: "activo" | "inactivo"): boolean => s === "activo";
-
   const fetchProfiles = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -120,7 +118,7 @@ const ConsultProfilesPage = () => {
       const query: ProfilesPaginatedQuery = {
         page,
         size: perPage,
-        Activo: mapStatusToActivo(status),
+        Activo: status === "todos" ? undefined : status === "activo",
         nombre: description.trim() || undefined,
       };
       const response = await getProfilesPaginatedUC.exec(query);
@@ -227,7 +225,7 @@ const ConsultProfilesPage = () => {
       {/* Filtros en la misma fila */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Buscador */}
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <div className="flex flex-col gap-1.5 sm:col-span-1">
           <Label htmlFor="description" className="text-xs sm:text-sm text-muted-foreground">
             Nombre / Descripción / Código
           </Label>
@@ -251,7 +249,7 @@ const ConsultProfilesPage = () => {
           </Label>
           <Select
             value={status}
-            onValueChange={(v: "activo" | "inactivo") => {
+            onValueChange={(v: "activo" | "inactivo" | "todos") => {
               setStatus(v);
               setPage(1);
             }}
@@ -260,6 +258,7 @@ const ConsultProfilesPage = () => {
               <SelectValue placeholder="Seleccione estado" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
               <SelectItem value="activo">Activo</SelectItem>
               <SelectItem value="inactivo">Inactivo</SelectItem>
             </SelectContent>

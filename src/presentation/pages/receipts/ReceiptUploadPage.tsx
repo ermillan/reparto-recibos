@@ -145,18 +145,6 @@ export default function ReceiptUploadPage() {
           <button
             className={classNames(
               "border-b-2 pb-2 transition-colors",
-              tab === "uploaded"
-                ? "border-sky-500 text-sky-600"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => setTab("uploaded")}
-            aria-current={tab === "uploaded" ? "page" : undefined}
-          >
-            Archivo(s) ya cargado(s)
-          </button>
-          <button
-            className={classNames(
-              "border-b-2 pb-2 transition-colors",
               tab === "new"
                 ? "border-sky-500 text-sky-600"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -165,6 +153,18 @@ export default function ReceiptUploadPage() {
             aria-current={tab === "new" ? "page" : undefined}
           >
             Carga de archivo(s)
+          </button>
+          <button
+            className={classNames(
+              "border-b-2 pb-2 transition-colors",
+              tab === "uploaded"
+                ? "border-sky-500 text-sky-600"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => setTab("uploaded")}
+            aria-current={tab === "uploaded" ? "page" : undefined}
+          >
+            Archivo(s) ya cargado(s)
           </button>
         </div>
       </header>
