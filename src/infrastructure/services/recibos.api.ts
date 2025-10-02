@@ -179,8 +179,8 @@ export class ReceiptApi {
     return http
       .get<ReceiptResponse>(ENDPOINTS.getReceiptsPaginated, {
         params: {
-          page: q?.page ?? 1,
-          pageSize: q?.pageSize ?? 20,
+          page: q?.page,
+          pageSize: q?.pageSize,
         },
       })
       .then((r) => r.data);
@@ -195,6 +195,19 @@ export class ReceiptApi {
     return http
       .post(`${ENDPOINTS.confirmReceipts}/${loteId}/confirmar`, {
         fechaInicioSlaUtc,
+      })
+      .then((r) => r.data);
+  }
+
+  /**
+   * Anula (cancela) un lote de recibos
+   * @param loteId ID del lote a anular
+   * @param motivo Motivo de anulación
+   */
+  cancelReceipt(loteId: number, motivo: string) {
+    return http
+      .delete(`${ENDPOINTS.deleteReceipts}/${loteId}/anular`, {
+        data: { motivo }, // 👈 DELETE con body
       })
       .then((r) => r.data);
   }
