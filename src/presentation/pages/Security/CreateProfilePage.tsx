@@ -339,7 +339,7 @@ const CreateProfilePage: React.FC = () => {
             <Label htmlFor="nombre">Nombre *</Label>
             <Input
               id="nombre"
-              placeholder="Ingrese nombre"
+              placeholder="Nombre"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={formDisabled}
@@ -350,7 +350,7 @@ const CreateProfilePage: React.FC = () => {
             <Label htmlFor="descripcion">Descripción *</Label>
             <Input
               id="descripcion"
-              placeholder="Ingrese la descripción"
+              placeholder="Descripción"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={formDisabled}

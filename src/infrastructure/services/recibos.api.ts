@@ -24,6 +24,7 @@ import type * as Profiles from "@/domain/profiles/profile.types";
 /** USERS */
 import type { IUserRepository } from "@/domain/users/user.port";
 import type * as Users from "@/domain/users/user.types";
+import type { ReceiptResponse } from "@/domain/archives/archive.types";
 
 /* ============ AUTH ============ */
 export class AuthApi implements IAuthRepository {
@@ -146,6 +147,55 @@ export class UserApi implements IUserRepository {
   getUsersAutocomplete(q?: Users.UsersAutocompleteQuery) {
     return http
       .get<Users.UsersAutocompleteResponse>(ENDPOINTS.getUsersAutocomplete, { params: q })
+      .then((r) => r.data);
+  }
+}
+
+/* ============ RECEIPTS ============ */
+export class ReceiptApi {
+  /**
+   * Valida un archivo de recibos antes de su procesamiento
+   * @param periodo string con el periodo, ej: "202509"
+   * @param file archivo excel/csv a validar
+   */
+  validateReceipts(periodo: string, file: File) {
+    const formData = new FormData();
+    formData.append("archivo", file);
+
+    return http
+      .post<any>(`${ENDPOINTS.validateReceipts}?Periodo=${periodo}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((r) => r.data);
+  }
+
+  /**
+   * Obtiene los recibos paginados
+   * @param q parámetros opcionales de paginación y filtros
+   */
+  getReceiptsPaginated(q?: { page?: number; pageSize?: number }) {
+    return http
+      .get<ReceiptResponse>(ENDPOINTS.getReceiptsPaginated, {
+        params: {
+          page: q?.page ?? 1,
+          pageSize: q?.pageSize ?? 20,
+        },
+      })
+      .then((r) => r.data);
+  }
+
+  /**
+   * Confirma la carga de un lote de recibos
+   * @param loteId ID del lote a confirmar
+   * @param fechaInicioSlaUtc Fecha de inicio SLA en formato UTC
+   */
+  confirmReceipts(loteId: number, fechaInicioSlaUtc: string) {
+    return http
+      .post(`${ENDPOINTS.confirmReceipts}/${loteId}/confirmar`, {
+        fechaInicioSlaUtc,
+      })
       .then((r) => r.data);
   }
 }

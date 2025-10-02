@@ -238,7 +238,7 @@ const ConsultProfilesPage = () => {
               setDescription(e.target.value);
               setPage(1);
             }}
-            className="h-10"
+            className="h-9"
           />
         </div>
 
@@ -254,7 +254,7 @@ const ConsultProfilesPage = () => {
               setPage(1);
             }}
           >
-            <SelectTrigger id="estado" className="h-10 w-full">
+            <SelectTrigger id="estado" className="h-12 w-full">
               <SelectValue placeholder="Seleccione estado" />
             </SelectTrigger>
             <SelectContent>

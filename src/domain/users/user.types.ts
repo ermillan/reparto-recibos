@@ -44,13 +44,14 @@ export interface UserByIdResponse {
 export interface UsersQuery {
   Page?: number;
   Size?: number;
+  IdContratistas?: any[] | null;
   Texto?: string;
   Login?: string;
   Codigo?: string;
   Nombre?: string;
   NumeroDocumento?: string;
   Activo?: boolean;
-  IdPerfil?: number;
+  IdPerfiles?: number[] | undefined;
   IdContratista?: number;
   SortBy?: string;
   Desc?: boolean;

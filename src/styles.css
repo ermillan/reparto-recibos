@@ -3,6 +3,7 @@
    --------------------------------------------------------- */
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "react-datepicker/dist/react-datepicker.css";
 
 /* ---------------------------------------------------------
    2) PALETA DE COLORES (brand) + GRADIENTE

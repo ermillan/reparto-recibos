@@ -1,3 +1,5 @@
+import { get } from "http";
+
 export const ENDPOINTS = {
   // AUTH
   login: "/api/Auth/login",
@@ -33,4 +35,9 @@ export const ENDPOINTS = {
   deleteUser: "/api/Usuarios",
   getUserById: "/api/Usuarios",
   getUsersAutocomplete: "/api/Usuarios/autocomplete",
+
+  // RECEIPTS
+  validateReceipts: "/api/CargaRecibos/validar",
+  getReceiptsPaginated: "/api/CargaRecibos",
+  confirmReceipts: "/api/CargaRecibos",
 };

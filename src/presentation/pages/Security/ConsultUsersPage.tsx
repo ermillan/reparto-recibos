@@ -33,13 +33,15 @@ import { toast } from "sonner";
 // UC (Application Layer)
 import { DeleteUser, GetUsersPaginated } from "@/application/users";
 import { GetContractors } from "@/application/contractor";
+import { GetProfiles } from "@/application/profiles";
 
 // Dominio (Domain Layer)
 import type { ContractorItem } from "@/domain/contractors/contractor.type";
 import type { UsersQuery } from "@/domain/users/user.types";
+import type { ProfileItem } from "@/domain/profile/profile.type";
 
 // Infraestructura (Infrastructure Layer)
-import { ContractorApi, UserApi } from "@/infrastructure/services/recibos.api";
+import { ContractorApi, UserApi, ProfileApi } from "@/infrastructure/services/recibos.api";
 
 // PaginationBar + Redux perPage
 import PaginationBar from "@/components/common/PaginationBar";
@@ -58,9 +60,11 @@ import {
 // Instancias de APIs y casos de uso
 const userApi = new UserApi();
 const contractorApi = new ContractorApi();
+const profileApi = new ProfileApi();
 
 const getUserPaginated = new GetUsersPaginated(userApi);
 const getContractors = new GetContractors(contractorApi);
+const getProfiles = new GetProfiles(profileApi);
 const deleteUser = new DeleteUser(userApi);
 
 // Tipo de fila de usuario
@@ -97,7 +101,7 @@ const ConsultUsersPage = () => {
   const [userFilter, setUserFilter] = useState("");
   const [documentFilter, setDocumentFilter] = useState("");
   const [contractorFilter, setContractorFilter] = useState("Todos");
-  // Cambiar el tipo de estado
+  const [profileFilter, setProfileFilter] = useState("Todos");
   const [statusFilter, setStatusFilter] = useState<"Activo" | "Inactivo" | "Todos">("Activo");
 
   // Orden
@@ -118,6 +122,10 @@ const ConsultUsersPage = () => {
   const [contractors, setContractors] = useState<ContractorItem[]>([]);
   const [loadingContractors, setLoadingContractors] = useState(false);
 
+  // Datos de perfiles
+  const [profiles, setProfiles] = useState<ProfileItem[]>([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(false);
+
   // Modal confirmación
   const [openConfirm, setOpenConfirm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
@@ -126,6 +134,11 @@ const ConsultUsersPage = () => {
   const idContratistaParam = useMemo<number | undefined>(() => {
     return contractorFilter === "Todos" ? undefined : Number(contractorFilter);
   }, [contractorFilter]);
+
+  // Param IdPerfil
+  const idPerfilParam = useMemo<number | undefined>(() => {
+    return profileFilter === "Todos" ? undefined : Number(profileFilter);
+  }, [profileFilter]);
 
   // Fetch contratistas
   const fetchContractors = useCallback(async () => {
@@ -146,6 +159,20 @@ const ConsultUsersPage = () => {
     }
   }, []);
 
+  // Fetch perfiles
+  const fetchProfiles = useCallback(async () => {
+    try {
+      setLoadingProfiles(true);
+      const list = await getProfiles.exec({ Activo: true });
+      setProfiles(list ?? []);
+    } catch (e) {
+      console.error("No se pudieron cargar perfiles", e);
+      setProfiles([]);
+    } finally {
+      setLoadingProfiles(false);
+    }
+  }, []);
+
   // Fetch usuarios
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -156,10 +183,10 @@ const ConsultUsersPage = () => {
         Size: perPage,
         Login: userFilter.trim() || undefined,
         Nombre: nameFilter.trim() || undefined,
-        Codigo: undefined,
         NumeroDocumento: documentFilter.trim() || undefined,
-        Activo: statusFilter === "Todos" ? undefined : statusFilter === "Activo", // 👈 aquí
+        Activo: statusFilter === "Todos" ? undefined : statusFilter === "Activo",
         IdContratista: idContratistaParam,
+        IdPerfil: idPerfilParam,
         SortBy: sortBy,
         Desc: sortDesc,
       };
@@ -186,6 +213,7 @@ const ConsultUsersPage = () => {
     documentFilter,
     statusFilter,
     idContratistaParam,
+    idPerfilParam,
     sortBy,
     sortDesc,
   ]);
@@ -193,7 +221,8 @@ const ConsultUsersPage = () => {
   // Hooks iniciales
   useEffect(() => {
     fetchContractors();
-  }, [fetchContractors]);
+    fetchProfiles();
+  }, [fetchContractors, fetchProfiles]);
 
   useEffect(() => {
     fetchUsers();
@@ -272,6 +301,7 @@ const ConsultUsersPage = () => {
               setUserFilter("");
               setDocumentFilter("");
               setContractorFilter("Todos");
+              setProfileFilter("Todos");
               setStatusFilter("Activo");
               setPage(1);
               fetchUsers();
@@ -377,7 +407,6 @@ const ConsultUsersPage = () => {
           </div>
 
           {/* Estado */}
-          {/* Estado */}
           <div className="grid gap-2">
             <Label htmlFor="estado">Estado</Label>
             <Select
@@ -394,6 +423,40 @@ const ConsultUsersPage = () => {
                 <SelectItem value="Todos">Todos</SelectItem>
                 <SelectItem value="Activo">Activo</SelectItem>
                 <SelectItem value="Inactivo">Inactivo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Perfil */}
+          <div className="grid gap-2">
+            <Label htmlFor="perfil">Perfil</Label>
+            <Select
+              value={profileFilter}
+              onValueChange={(v) => {
+                setProfileFilter(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger id="perfil" className="h-12 w-full">
+                <SelectValue placeholder="Perfil" />
+              </SelectTrigger>
+              <SelectContent className="max-h-64 overflow-auto">
+                <SelectItem value="Todos">Todos</SelectItem>
+                {loadingProfiles ? (
+                  <SelectItem value="__loading" disabled>
+                    Cargando...
+                  </SelectItem>
+                ) : profiles.length === 0 ? (
+                  <SelectItem value="__empty" disabled>
+                    Sin perfiles
+                  </SelectItem>
+                ) : (
+                  profiles.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.nombre}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
