@@ -88,7 +88,7 @@ export function AppSidebar() {
           </div>
           <div className="min-w-0 group-data-[state=collapsed]/sidebar:hidden">
             <div className="font-semibold leading-tight text-wrap">
-              Sistema de entrega de recibos
+              Sistema de Reparto de Recibos
             </div>
             <div className="text-xs opacity-85 truncate">{user?.roles}</div>
             <div className="text-xs opacity-85 truncate">{user?.nombre}</div>

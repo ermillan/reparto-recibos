@@ -9,6 +9,8 @@ import {
   CalendarDays,
   File,
   Save,
+  UploadIcon,
+  DownloadIcon,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Input } from "@/components/ui/input";
@@ -58,7 +60,7 @@ export default function NewReceiptTab() {
   const [uploading, setUploading] = useState(false);
   const [isValidFile, setIsValidFile] = useState(false);
   const [missingCols, setMissingCols] = useState<string[]>([]);
-  const [periodo, setPeriodo] = useState("");
+  const [periodo, setPeriodo] = useState("102025");
   const [result, setResult] = useState<any | null>(null);
 
   // Modal
@@ -247,16 +249,20 @@ export default function NewReceiptTab() {
           onChange={onInputChange}
         />
         <div className="mx-auto grid max-w-sm place-items-center gap-3">
-          <div className="rounded-full bg-sky-100 p-3 text-sky-600">
-            <UploadCloud className="h-6 w-6" />
+          <div className="">
+            <UploadCloud className="h-12 w-12 text-primary" />
           </div>
-          <div className="text-sm">
-            <span className="font-medium text-foreground">Arrastra y suelta</span> tu archivo aquí,
-            o <span className="font-medium text-sky-600 underline">haz click para seleccionar</span>
+          <div className="flex flex-col gap-2 text-sm text-center">
+            <span className="text-foreground font-bold">Arrastra y suelta tu archivo aquí </span>
+            <span className="flex w-full items-center justify-center"> o </span>
+            <span className="border border-gray-400 py-2 px-4 rounded-md shadow-lg font-bold flex flex-row items-center gap-2 text-sm hover:bg-primary hover:text-white transition-colors ease-in-out duration-300 hover:border-primary">
+              <UploadIcon className="h-5 w-5" />
+              Seleccionar Archivo
+            </span>
             .
           </div>
           <div className="text-xs text-muted-foreground">
-            Tamaño máx. por archivo: {MAX_SIZE_MB}MB — Tipos: {ACCEPTED_TYPES.join(", ")}
+            Tamaño máximo: {MAX_SIZE_MB}MB — Formatos: {ACCEPTED_TYPES.join(", ")}
           </div>
         </div>
       </section>
@@ -341,8 +347,8 @@ export default function NewReceiptTab() {
       {/* Botones */}
       <div className="mx-auto mt-6 flex max-w-3xl justify-center gap-3">
         <Button onClick={handleUpload} disabled={!canUpload} className="flex items-center gap-2">
-          <UploadCloud className="h-4 w-4" />
-          {uploading ? "Subiendo..." : "Validar archivo de recibos"}
+          <FileSpreadsheet className="h-4 w-4" />
+          {uploading ? "Subiendo..." : "Validar archivo"}
         </Button>
 
         <div className="relative inline-block">
@@ -352,7 +358,7 @@ export default function NewReceiptTab() {
             onClick={handleClick}
             className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
           >
-            <FileSpreadsheet className="h-4 w-4" />
+            <DownloadIcon className="h-4 w-4" />
             Descargar plantilla
           </a>
           {showArrow && (
@@ -369,9 +375,6 @@ export default function NewReceiptTab() {
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle className="text-sky-700">Resumen de carga de recibos</DialogTitle>
-              <DialogDescription>
-                Detalles de la validación del archivo antes de confirmar la carga
-              </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6 text-sm max-h-[70vh] overflow-y-auto pr-2">

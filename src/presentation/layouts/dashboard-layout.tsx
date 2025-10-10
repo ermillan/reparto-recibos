@@ -18,7 +18,7 @@ export default function DashboardLayout() {
             <div className="flex h-14 items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1 border-none" />
               <h1 className="text-base sm:text-lg font-semibold text-center">
-                Sistema de entrega de recibos
+                Sistema de Reparto de Recibos
               </h1>
             </div>
           </header>

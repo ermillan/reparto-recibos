@@ -230,9 +230,11 @@ export default function UploadedReceiptsTab() {
               id="reason"
               placeholder="Escriba el motivo..."
               value={reason}
+              maxLength={50}
               onChange={(e) => setReason(e.target.value)}
               className="min-h-[80px]"
             />
+            <Label>{reason.length} / 50 caracteres.</Label>
           </div>
 
           <DialogFooter>
