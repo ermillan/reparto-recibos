@@ -25,6 +25,11 @@ import type * as Profiles from "@/domain/profiles/profile.types";
 import type { IUserRepository } from "@/domain/users/user.port";
 import type * as Users from "@/domain/users/user.types";
 import type { ReceiptResponse } from "@/domain/archives/archive.types";
+import type {
+  AssignmentItem,
+  FiltersAssignmentResult,
+  PagedResult,
+} from "@/domain/assignment/assignmen.types";
 
 /* ============ AUTH ============ */
 export class AuthApi implements IAuthRepository {
@@ -208,6 +213,51 @@ export class ReceiptApi {
     return http
       .delete(`${ENDPOINTS.deleteReceipts}/${loteId}/anular`, {
         data: { motivo }, // 👈 DELETE con body
+      })
+      .then((r) => r.data);
+  }
+}
+
+/* ============ ASSIGNMENTS ============ */
+/**
+ * API de Asignaciones (Assignments)
+ * Interactúa con el controlador AssignmentController
+ */
+export class AssignmentApi {
+  /**
+   * 🔹 Obtiene los filtros dinámicos relacionados (Periodo, Distrito, Porción y Contratista)
+   * @param q parámetros opcionales para filtrar los combos dependientes
+   */
+  getFilters(q: {
+    uid: number;
+    idContratista?: number;
+    periodo?: string;
+    distrito?: string;
+    porcion?: string;
+  }) {
+    return http
+      .get<FiltersAssignmentResult>(ENDPOINTS.assignmentFilters, {
+        params: q,
+      })
+      .then((r) => r.data);
+  }
+
+  /**
+   * 🔹 Obtiene la lista paginada de asignaciones
+   * @param q parámetros de paginación y filtros
+   */
+  getAssignmentsPaginated(q: {
+    uid: number;
+    idContratista?: number;
+    periodo?: string;
+    distrito?: string;
+    porcion?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    return http
+      .get<PagedResult<AssignmentItem>>(ENDPOINTS.assignments, {
+        params: q,
       })
       .then((r) => r.data);
   }

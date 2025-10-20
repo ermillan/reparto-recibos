@@ -51,7 +51,7 @@ interface AuthOptionsResponse {
 const authRepo = new AuthApi();
 const getAuthOptions = new GetAuthOptions(authRepo);
 
-// Mapeo de iconos según nombre
+// 🧩 Mapeo de iconos
 const iconMap: Record<string, JSX.Element> = {
   Seguridad: <Shield className="h-4 w-4" />,
   Usuarios: <Users className="h-4 w-4" />,
@@ -59,6 +59,7 @@ const iconMap: Record<string, JSX.Element> = {
   "Gestión de Recibos": <FileText className="h-4 w-4" />,
   Perfiles: <Users className="h-4 w-4" />,
   "Carga de Recibos": <Upload className="h-4 w-4" />,
+  Recibos: <FileText className="h-4 w-4" />,
 };
 
 export function AppSidebar() {
@@ -69,9 +70,30 @@ export function AppSidebar() {
   useEffect(() => {
     (async () => {
       const response = await getAuthOptions.exec();
-      setData(response as unknown as AuthOptionsResponse);
+      const menu = (response as unknown as AuthOptionsResponse).menu;
+
+      // ✅ Si el usuario es Contratista → agregar opción "Recibos"
+      if (user?.roles === "Contratista") {
+        const index = menu.findIndex((item) => item.name === "Gestión de Recibos");
+        if (index !== -1) {
+          menu.splice(index + 1, 0, {
+            id: "recibos",
+            name: "Recibos",
+            to: "/recibos/list",
+          });
+        } else {
+          // Si no existe Gestión de Recibos, la agregamos al final
+          menu.push({
+            id: "recibos",
+            name: "Recibos",
+            to: "/recibos/list",
+          });
+        }
+      }
+
+      setData({ menu });
     })();
-  }, []);
+  }, [user?.roles]);
 
   const handleLogout = () => {
     logoutUser();

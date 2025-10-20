@@ -21,6 +21,7 @@ export const ROUTES = {
       ROOT: "/recibos",
       UPLOAD: "/recibos",
       LEGACY_UPLOAD: "/recibos",
+      LISTRECEIPTS: "/recibos/list",
     },
   },
   FALLBACK: "*",

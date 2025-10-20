@@ -41,4 +41,8 @@ export const ENDPOINTS = {
   getReceiptsPaginated: "/api/CargaRecibos",
   confirmReceipts: "/api/CargaRecibos",
   deleteReceipts: "/api/CargaRecibos",
+
+  //
+  assignments: "/api/Assignment",
+  assignmentFilters: "/api/Assignment/filters",
 };

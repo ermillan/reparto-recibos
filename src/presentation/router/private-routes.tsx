@@ -11,6 +11,7 @@ import {
 } from "../pages/Security";
 import { ReceiptUploadPage } from "../pages/receipts";
 import { UpdateParamsPage } from "../pages/Admin";
+import ReceiptListPage from "../pages/receipts/ReceiptListPage";
 
 export const PrivateRoutes = (
   <Route element={<DashboardLayout />}>
@@ -32,5 +33,6 @@ export const PrivateRoutes = (
     <Route path={ROUTES.PRIVATE.RECEIPTS.UPLOAD} element={<ReceiptUploadPage />} />
     <Route path={ROUTES.PRIVATE.RECEIPTS.ROOT} element={<div>Gestión de Recibos</div>} />
     <Route path={ROUTES.PRIVATE.RECEIPTS.LEGACY_UPLOAD} element={<div>Carga de Recibos</div>} />
+    <Route path={ROUTES.PRIVATE.RECEIPTS.LISTRECEIPTS} element={<ReceiptListPage />} />
   </Route>
 );
