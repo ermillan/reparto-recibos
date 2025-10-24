@@ -1,4 +1,3 @@
-// infrastructure/http/httpClient.ts
 import axios, { AxiosHeaders, type AxiosRequestConfig } from "axios";
 import { API_BASE_URL } from "@/infrastructure/env/config";
 import { store } from "@/store/store";

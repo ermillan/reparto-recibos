@@ -1,9 +1,10 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }],
   "compilerOptions": {
     "target": "ES2017",
-    "composite": true,
+    "baseUrl": ".",  // ✅ Aquí
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "module": "ESNext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
@@ -17,5 +18,7 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
-  }
+  },
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }]
 }

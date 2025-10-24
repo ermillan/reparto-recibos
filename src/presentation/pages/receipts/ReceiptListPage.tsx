@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useCallback, useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -8,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -17,44 +15,33 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ArrowDown,
-  ArrowUp,
-  RotateCcw,
-  FileSpreadsheet,
-  MapPin,
-  Calendar,
-  Building2,
-  Layers,
-} from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import PaginationBar from "@/components/common/PaginationBar";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
-// Application
 import { useAuth } from "@/hooks/use-auth";
 import { useAppSelector } from "@/store/hooks";
 import { selectPerPage } from "@/store/slices/tablePrefs.slice";
 import { AssignmentApi } from "@/infrastructure/services/recibos.api";
 import type { AssignmentItem, FiltersAssignmentResult } from "@/domain/assignment/assignmen.types";
 
-// Instancia API
 const assignmentApi = new AssignmentApi();
 
 const ReceiptListPage = () => {
   const { user } = useAuth();
   const perPage = useAppSelector(selectPerPage);
 
-  // Filtros
+  // 🔹 Estados de filtros
   const [periodo, setPeriodo] = useState("Todos");
+  const [provincia, setProvincia] = useState("Todos");
   const [distrito, setDistrito] = useState("Todos");
   const [porcion, setPorcion] = useState("Todos");
   const [contratista, setContratista] = useState("Todos");
 
-  // Data de filtros
+  // 🔹 Estados de datos
   const [filterData, setFilterData] = useState<FiltersAssignmentResult | null>(null);
   const [loadingFilters, setLoadingFilters] = useState(false);
-
-  // Asignaciones (Recibos)
   const [rows, setRows] = useState<AssignmentItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -62,62 +49,68 @@ const ReceiptListPage = () => {
   const [loading, setLoading] = useState(false);
 
   const uid = Number(user?.id ?? 0);
-  const idContratista = user?.roles === "Contratista" ? Number(user?.id) : undefined;
 
-  // Fetch filtros dinámicos
+  // ======================================================
+  // 🔹 Cargar filtros dinámicos
+  // ======================================================
   const fetchFilters = useCallback(async () => {
     try {
       setLoadingFilters(true);
       const result = await assignmentApi.getFilters({
-        uid: Number(uid),
-        idContratista,
+        uid,
         periodo: periodo !== "Todos" ? periodo : undefined,
         distrito: distrito !== "Todos" ? distrito : undefined,
         porcion: porcion !== "Todos" ? porcion : undefined,
       });
       setFilterData(result);
-    } catch (error) {
+    } catch {
       toast.error("Error al cargar filtros");
     } finally {
       setLoadingFilters(false);
     }
-  }, [uid, idContratista, periodo, distrito, porcion]);
+  }, [uid, periodo, distrito, porcion]);
 
-  // Fetch asignaciones paginadas
+  // ======================================================
+  // 🔹 Cargar asignaciones
+  // ======================================================
   const fetchAssignments = useCallback(async () => {
     try {
       setLoading(true);
       const result = await assignmentApi.getAssignmentsPaginated({
         uid,
-        idContratista,
         periodo: periodo !== "Todos" ? periodo : undefined,
+        provincia: provincia !== "Todos" ? provincia : undefined,
         distrito: distrito !== "Todos" ? distrito : undefined,
         porcion: porcion !== "Todos" ? porcion : undefined,
+        contratista: contratista !== "Todos" ? contratista : undefined,
         page,
         pageSize: perPage,
       });
 
       setRows(result.items ?? []);
       setTotal(result.totalCount ?? 0);
-    } catch (error) {
+    } catch {
       toast.error("Error al cargar los recibos");
     } finally {
       setLoading(false);
     }
-  }, [uid, idContratista, periodo, distrito, porcion, page, perPage]);
+  }, [uid, periodo, provincia, distrito, porcion, contratista, page, perPage]);
 
+  // ======================================================
+  // 🔹 Efectos
+  // ======================================================
   useEffect(() => {
     fetchFilters();
   }, [fetchFilters]);
 
   useEffect(() => {
-    fetchAssignments();
-  }, [fetchAssignments]);
+    if (filterData) fetchAssignments();
+  }, [fetchAssignments, filterData]);
 
-  const handleSort = () => {
-    setSortDesc((p) => !p);
-  };
-
+  // ======================================================
+  // 🔹 Helpers UI
+  // ======================================================
+  const handleSort = () => setSortDesc((prev) => !prev);
   const renderSortIcon = () =>
     sortDesc ? (
       <ArrowDown className="inline h-4 w-4 ml-1" />
@@ -125,44 +118,62 @@ const ReceiptListPage = () => {
       <ArrowUp className="inline h-4 w-4 ml-1" />
     );
 
+  const formatDateTime = (dateString?: string | null) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleString("es-PE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  };
+
+  const renderEstadoChip = (estado?: string | null) => {
+    if (!estado) return <Badge variant="secondary">Sin estado</Badge>;
+
+    const normalized = estado.toLowerCase();
+    let color: "success" | "warning" | "destructive" | "secondary" = "secondary";
+
+    switch (normalized) {
+      case "confirmado":
+      case "completado":
+        color = "success";
+        break;
+      case "pendiente":
+      case "en proceso":
+        color = "warning";
+        break;
+      case "rechazado":
+      case "error":
+        color = "destructive";
+        break;
+    }
+
+    const base = "text-xs font-semibold px-3 py-1 rounded-full capitalize";
+    const styleMap: Record<string, string> = {
+      success: "bg-emerald-100 text-emerald-700 border border-emerald-300",
+      warning: "bg-amber-100 text-amber-700 border border-amber-300",
+      destructive: "bg-rose-100 text-rose-700 border border-rose-300",
+      secondary: "bg-slate-100 text-slate-700 border border-slate-300",
+    };
+
+    return <span className={`${base} ${styleMap[color]}`}>{estado}</span>;
+  };
+
+  // ======================================================
+  // 🔹 Render principal
+  // ======================================================
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-xl font-semibold text-primary">Lista de Recibos</h1>
+      <h1 className="text-xl font-semibold text-primary">Lista de Recibos</h1>
 
-        <div className="flex gap-2 w-full sm:w-auto justify-center">
-          {/* <Button
-            variant="ghost"
-            className="justify-center gap-2"
-            onClick={() => {
-              setPeriodo("Todos");
-              setDistrito("Todos");
-              setPorcion("Todos");
-              setContratista("Todos");
-              setPage(1);
-              fetchAssignments();
-            }}
-          >
-            <RotateCcw className="h-4 w-4" />
-            <span>Actualizar</span>
-          </Button> */}
-
-          {/* <div className="w-full h-full flex items-center justify-center">
-            <a
-              href={`/`}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              Descargar
-            </a>
-          </div> */}
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="rounded-md border p-4 md:p-5 bg-card">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ==================== FILTROS ==================== */}
+      <div className="rounded-md border p-4 bg-card">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Periodo */}
           <div className="grid gap-2">
             <Label htmlFor="periodo">Periodo</Label>
@@ -176,19 +187,37 @@ const ReceiptListPage = () => {
               <SelectTrigger id="periodo" className="h-12 w-full">
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
-              <SelectContent className="max-h-64 overflow-auto">
+              <SelectContent>
                 <SelectItem value="Todos">Todos</SelectItem>
-                {loadingFilters ? (
-                  <SelectItem value="__loading" disabled>
-                    Cargando...
+                {filterData?.periodos?.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
                   </SelectItem>
-                ) : (
-                  filterData?.periodos?.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))
-                )}
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Provincia */}
+          <div className="grid gap-2">
+            <Label htmlFor="provincia">Provincia</Label>
+            <Select
+              value={provincia}
+              onValueChange={(v) => {
+                setProvincia(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger id="provincia" className="h-12 w-full">
+                <SelectValue placeholder="Provincia" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos">Todos</SelectItem>
+                {filterData?.provincias?.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -206,7 +235,7 @@ const ReceiptListPage = () => {
               <SelectTrigger id="distrito" className="h-12 w-full">
                 <SelectValue placeholder="Distrito" />
               </SelectTrigger>
-              <SelectContent className="max-h-64 overflow-auto">
+              <SelectContent>
                 <SelectItem value="Todos">Todos</SelectItem>
                 {filterData?.distritos?.map((d) => (
                   <SelectItem key={d} value={d}>
@@ -230,7 +259,7 @@ const ReceiptListPage = () => {
               <SelectTrigger id="porcion" className="h-12 w-full">
                 <SelectValue placeholder="Porción" />
               </SelectTrigger>
-              <SelectContent className="max-h-64 overflow-auto">
+              <SelectContent>
                 <SelectItem value="Todos">Todos</SelectItem>
                 {filterData?.porciones?.map((p) => (
                   <SelectItem key={p} value={p}>
@@ -254,7 +283,7 @@ const ReceiptListPage = () => {
               <SelectTrigger id="contratista" className="h-12 w-full">
                 <SelectValue placeholder="Contratista" />
               </SelectTrigger>
-              <SelectContent className="max-h-64 overflow-auto">
+              <SelectContent>
                 <SelectItem value="Todos">Todos</SelectItem>
                 {filterData?.contratistas?.map((c) => (
                   <SelectItem key={c} value={c}>
@@ -267,46 +296,59 @@ const ReceiptListPage = () => {
         </div>
       </div>
 
-      {/* Tabla */}
+      {/* ==================== TABLA ==================== */}
       <div className="rounded-md border overflow-x-auto">
         <Table>
-          <TableHeader className="bg-primary">
+          <TableHeader className="bg-primary text-white">
             <TableRow>
-              <TableHead className="cursor-pointer px-4 py-2" onClick={handleSort}>
+              <TableHead onClick={handleSort} className="cursor-pointer">
                 Periodo {renderSortIcon()}
               </TableHead>
-              <TableHead className="px-4 py-2">Distrito</TableHead>
-              <TableHead className="px-4 py-2">Porción</TableHead>
-              <TableHead className="px-4 py-2">Contratista</TableHead>
-              <TableHead className="px-4 py-2">Filas Válidas</TableHead>
-              <TableHead className="px-4 py-2">Filas Inválidas</TableHead>
-              <TableHead className="px-4 py-2">Total</TableHead>
-              <TableHead className="px-4 py-2">Estado</TableHead>
+              <TableHead>Unidad Lectura</TableHead>
+              <TableHead>ID Lote</TableHead>
+              <TableHead>Contratista</TableHead>
+              <TableHead>Provincia</TableHead>
+              <TableHead>Distrito</TableHead>
+              <TableHead>Porción</TableHead>
+              <TableHead>Ciclo</TableHead>
+              <TableHead>Repartidor</TableHead>
+              <TableHead>Total Registros</TableHead>
+              {/* <TableHead>Filas Válidas</TableHead>
+              <TableHead>Filas Inválidas</TableHead> */}
+              <TableHead>Fecha Asignación</TableHead>
+              <TableHead>Fecha Máxima SLA</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center text-muted-foreground">
+                <TableCell colSpan={15} className="text-center py-6">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : rows.length > 0 ? (
-              rows.map((item) => (
-                <TableRow key={item.idLote}>
+              rows.map((item, index) => (
+                <TableRow key={`${item.idLote}-${index}`}>
                   <TableCell>{item.periodo}</TableCell>
+                  <TableCell>{item.unidadLectura ?? "—"}</TableCell>
+                  <TableCell>{item.idLote}</TableCell>
+                  <TableCell>{item.contratista ?? "—"}</TableCell>
+                  <TableCell>{item.provincia ?? "—"}</TableCell>
                   <TableCell>{item.distrito ?? "—"}</TableCell>
                   <TableCell>{item.porcion ?? "—"}</TableCell>
-                  <TableCell>{item.contratista}</TableCell>
-                  <TableCell>{item.filasValidas}</TableCell>
-                  <TableCell>{item.filasInvalidas}</TableCell>
-                  <TableCell>{item.filasTotal}</TableCell>
-                  <TableCell>{item.estado}</TableCell>
+                  <TableCell>{item.ciclo ?? "—"}</TableCell>
+                  <TableCell>{item.repartidor ?? "—"}</TableCell>
+                  <TableCell>{item.totalRegistros}</TableCell>
+                  {/* <TableCell>{item.filasValidas ?? 0}</TableCell>
+                  <TableCell>{item.filasInvalidas ?? 0}</TableCell> */}
+                  <TableCell>{formatDateTime(item.fechaAsignacion)}</TableCell>
+                  <TableCell>{formatDateTime(item.fechaMaximaSLA)}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-4">
+                <TableCell colSpan={15} className="text-center py-4 text-muted-foreground">
                   No se encontraron resultados
                 </TableCell>
               </TableRow>
@@ -315,14 +357,7 @@ const ReceiptListPage = () => {
         </Table>
       </div>
 
-      {/* Paginación */}
-      <PaginationBar
-        total={total}
-        page={page}
-        onPageChange={setPage}
-        isLoading={loading}
-        className="mt-2"
-      />
+      <PaginationBar total={total} page={page} onPageChange={setPage} isLoading={loading} />
     </div>
   );
 };

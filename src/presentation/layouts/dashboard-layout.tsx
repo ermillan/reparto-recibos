@@ -1,11 +1,9 @@
-// src/layouts/DashboardLayout.tsx
 import { Outlet } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function DashboardLayout() {
   return (
-    // src/layouts/DashboardLayout.tsx
     <SidebarProvider>
       <div className="flex min-h-screen w-full overflow-hidden">
         {/* Sidebar */}

@@ -20,11 +20,9 @@ import { ReceiptApi } from "@/infrastructure/services/recibos.api";
 import { ACCEPTED_TYPES, MAX_SIZE_MB } from "@/application/archive/archive.config";
 import { REQUIRED_COLUMNS } from "@/domain/archives/archive.constants";
 
-// shadcn/ui
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -35,7 +33,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import CalloutGreen from "./CalloutGreen";
 import Description from "./Description";
 
-// 📅 DatePicker externo
 import DatePicker from "react-datepicker";
 
 function classNames(...xs: Array<string | false | undefined>) {

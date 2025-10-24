@@ -25,11 +25,13 @@ import type * as Profiles from "@/domain/profiles/profile.types";
 import type { IUserRepository } from "@/domain/users/user.port";
 import type * as Users from "@/domain/users/user.types";
 import type { ReceiptResponse } from "@/domain/archives/archive.types";
+import type { IAssignmentRepository } from "@/domain/assignment/assignment.port";
 import type {
   AssignmentItem,
   FiltersAssignmentResult,
   PagedResult,
-} from "@/domain/assignment/assignmen.types";
+} from "@/domain/assignment/assignment.types";
+import { IReceiptRepository } from "@/domain/receipts/receipt.port";
 
 /* ============ AUTH ============ */
 export class AuthApi implements IAuthRepository {
@@ -157,7 +159,7 @@ export class UserApi implements IUserRepository {
 }
 
 /* ============ RECEIPTS ============ */
-export class ReceiptApi {
+export class ReceiptApi implements IReceiptRepository {
   /**
    * Valida un archivo de recibos antes de su procesamiento
    * @param periodo string con el periodo, ej: "202509"
@@ -223,7 +225,7 @@ export class ReceiptApi {
  * API de Asignaciones (Assignments)
  * Interactúa con el controlador AssignmentController
  */
-export class AssignmentApi {
+export class AssignmentApi implements IAssignmentRepository {
   /**
    * 🔹 Obtiene los filtros dinámicos relacionados (Periodo, Distrito, Porción y Contratista)
    * @param q parámetros opcionales para filtrar los combos dependientes
@@ -251,6 +253,8 @@ export class AssignmentApi {
     idContratista?: number;
     periodo?: string;
     distrito?: string;
+    provincia?: string;
+    contratista?: string;
     porcion?: string;
     page?: number;
     pageSize?: number;

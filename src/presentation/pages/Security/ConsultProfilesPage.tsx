@@ -1,4 +1,3 @@
-// src/pages/security/profiles/ConsultProfile.tsx
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

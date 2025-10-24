@@ -6,7 +6,6 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-// Casos de uso / API
 import { ParamsApi } from "@/infrastructure/services/recibos.api";
 import { GetSystemParameters, UpdateSystemParameters } from "@/application/params";
 import type { SystemParams } from "@/domain/params/params.types";
@@ -15,14 +14,12 @@ const api = new ParamsApi();
 const getParamsUseCase = new GetSystemParameters(api);
 const updateParamsUseCase = new UpdateSystemParameters(api);
 
-// Tipo UI (solo strings para inputs)
 type SystemParamsForm = {
   gpsRadius: string;
   slaHours: string;
   rowVer: string;
 };
 
-// Regex para validar solo números enteros positivos
 const numberRegex = /^[0-9]+$/;
 
 const UpdateParamsPage: React.FC = () => {

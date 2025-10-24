@@ -36,7 +36,6 @@ import { useEffect, useState } from "react";
 import { AuthApi } from "@/infrastructure/services/recibos.api";
 import { normalizePath } from "@/lib/utils/path-utils";
 
-// 📝 Tipos para el menú
 interface AuthMenuItem {
   id: string;
   name: string;
@@ -51,7 +50,6 @@ interface AuthOptionsResponse {
 const authRepo = new AuthApi();
 const getAuthOptions = new GetAuthOptions(authRepo);
 
-// 🧩 Mapeo de iconos
 const iconMap: Record<string, JSX.Element> = {
   Seguridad: <Shield className="h-4 w-4" />,
   Usuarios: <Users className="h-4 w-4" />,
@@ -72,7 +70,6 @@ export function AppSidebar() {
       const response = await getAuthOptions.exec();
       const menu = (response as unknown as AuthOptionsResponse).menu;
 
-      // ✅ Si el usuario es Contratista → agregar opción "Recibos"
       if (user?.roles === "Contratista") {
         const index = menu.findIndex((item) => item.name === "Gestión de Recibos");
         if (index !== -1) {
@@ -82,7 +79,6 @@ export function AppSidebar() {
             to: "/recibos/list",
           });
         } else {
-          // Si no existe Gestión de Recibos, la agregamos al final
           menu.push({
             id: "recibos",
             name: "Recibos",

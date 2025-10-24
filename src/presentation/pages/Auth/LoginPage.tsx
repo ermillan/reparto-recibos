@@ -205,7 +205,7 @@ const LoginFooter: React.FC<LoginFooterProps> = ({
 // Página principal
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { loginUser, logoutUser } = useAuth(); // 👈 añadimos logoutUser
+  const { loginUser, logoutUser } = useAuth();
 
   const [visiblePass, setVisiblePass] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -220,7 +220,6 @@ const LoginPage: React.FC = () => {
   const [otp, setOtp] = useState("");
   const [secondsRemaining, setSecondsRemaining] = useState(OTP_WINDOW_MINUTES * 60);
 
-  // 🔑 Logout forzado al montar
   useEffect(() => {
     logoutUser();
     sessionStorage.clear();

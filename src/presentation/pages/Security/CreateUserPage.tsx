@@ -13,12 +13,10 @@ import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-// Hexagonal – UseCases
 import { GetProfiles } from "@/application/profiles";
 import { CreateUser, GetUserById, UpdateUser } from "@/application/users";
 import { GetContractors } from "@/application/contractor";
 
-// Tipos dominio
 import type {
   CreateUserRequest,
   UpdateUserRequest,
@@ -26,7 +24,6 @@ import type {
 } from "@/domain/users/user.types";
 import type { ContractorItem } from "@/domain/contractors/contractor.type";
 
-// Infra repos
 import { ContractorApi, ProfileApi, UserApi } from "@/infrastructure/services/recibos.api";
 
 type ProfileOption = {
@@ -174,10 +171,8 @@ const CreateUserPage = () => {
     if (!regex.documento.test(form.documento)) return true;
     if (Object.values(errors).some(Boolean)) return true;
 
-    // ✅ Perfil obligatorio
     if (!selectedProfileId) return true;
 
-    // ✅ Si requiere contratista, también obligatorio
     if (requiresContractor && !selectedContractorId) return true;
 
     return false;

@@ -1,4 +1,3 @@
-// src/store/slices/authSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface AuthUser {
@@ -8,7 +7,6 @@ export interface AuthUser {
   login?: string;
   nombre?: string;
   roles?: string;
-  // agrega más campos reales si los tienes
 }
 
 export interface AuthState {

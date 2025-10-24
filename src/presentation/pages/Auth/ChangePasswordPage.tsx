@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 
-// Caso de uso/capa de infraestructura
 import { ChangePasswordFirstTime } from "@/application/auth";
 import { AuthApi } from "@/infrastructure/services/recibos.api";
 
@@ -25,7 +24,6 @@ const changePasswordFirstTime = new ChangePasswordFirstTime(authRepo);
 type PasswordState = { newPassword: string; confirmPassword: string };
 const MIN_LEN = 8;
 
-// 👉 Obtiene el resetToken desde state o sessionStorage
 const pickResetToken = (loc: ReturnType<typeof useLocation>): string => {
   const fromState = (loc.state as any)?.resetToken as string | undefined;
   const fromSession = sessionStorage.getItem("resetToken") ?? "";
@@ -37,7 +35,7 @@ const pickResetToken = (loc: ReturnType<typeof useLocation>): string => {
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logoutUser } = useAuth(); // 👈 usamos logoutUser para limpiar Redux también
+  const { logoutUser } = useAuth();
 
   const [resetToken, setResetToken] = useState<string>("");
   const [loading, setLoading] = useState(false);

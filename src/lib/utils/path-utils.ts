@@ -1,4 +1,3 @@
-// utils/path-utils.ts
 export const normalizePath = (parent: string, child?: string) => {
   const base = parent.toLowerCase();
 
