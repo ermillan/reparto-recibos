@@ -1,9 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "baseUrl": ".",  // ✅ Aquí
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@assets/*": ["src/assets/*"],
+      "@utils/*": ["src/utils/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@lib/*": ["src/lib/*"]
     },
     "module": "ESNext",
     "moduleResolution": "Node",

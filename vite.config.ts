@@ -12,52 +12,29 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
-    base: mode === "production" ? "/FrontRepartoRecibos/" : "/FrontRepartoRecibos/",
+    base: "/FrontRepartoRecibos/",
+
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "@components": path.resolve(__dirname, "./src/components"),
         "@assets": path.resolve(__dirname, "./src/assets"),
         "@utils": path.resolve(__dirname, "./src/utils"),
-        "@lib": path.resolve(__dirname, "./src/lib"),
         "@hooks": path.resolve(__dirname, "./src/hooks"),
-        "@ui": "@/components/ui",
+        "@lib": path.resolve(__dirname, "./src/lib"),
       },
     },
+
     build: {
       outDir: "dist",
       sourcemap: mode !== "production",
       chunkSizeWarningLimit: 1500,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes("node_modules")) {
-              if (id.includes("@radix-ui")) return "ui";
-              if (id.includes("lucide-react")) return "ui";
-              if (id.includes("react-router-dom")) return "router";
-              if (id.includes("react")) return "react";
-            }
-          },
-        },
-      },
     },
+
     server: {
       open: true,
       port: 5173,
       strictPort: true,
-    },
-    define: {
-      "process.env.NODE_ENV": JSON.stringify(mode),
-    },
-    css: {
-      modules: {
-        localsConvention: "camelCase",
-      },
-      preprocessorOptions: {
-        scss: {
-          additionalData: `@import "@/styles/variables.scss";`,
-        },
-      },
     },
   };
 });
